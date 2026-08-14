@@ -32,14 +32,18 @@ body.auth-pending{visibility:hidden}
 .sync-state{position:fixed;left:14px;bottom:14px;z-index:40;padding:8px 12px;border-radius:999px;background:rgba(35,23,43,.9);color:#fff;font-size:10px;font-weight:800;opacity:0;transition:.2s}
 .sync-state.show{opacity:1}
 .chapter{
-  min-height:100vh;
+  height:100vh;
+  height:100svh;
   scroll-snap-align:start;
+  scroll-snap-stop:always;
   display:flex;
   align-items:center;
   justify-content:center;
   padding:54px 24px;
   position:relative;
-  overflow:hidden;
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior:contain;
 }
 .inner{width:min(1220px,100%);position:relative;z-index:2}
 .chapter h1,.chapter h2{
@@ -229,7 +233,7 @@ select{
   .arrow{transform:rotate(90deg)}
 }
 @media(max-width:600px){
-  .chapter{padding:40px 16px}
+  .chapter{padding:34px 16px}
   .metrics,.result-grid{grid-template-columns:1fr}
   .chapter-index{display:none}
   .hero h1{font-size:62px}
@@ -721,6 +725,26 @@ if('IntersectionObserver' in window){
 }
 const firstReveal=document.querySelector('#c1 .reveal');
 if(firstReveal) firstReveal.classList.add('show');
+
+let wheelLocked=false;
+window.addEventListener('wheel',event=>{
+  if(Math.abs(event.deltaY)<12||wheelLocked)return;
+  const current=chapters.reduce((best,chapter)=>
+    Math.abs(chapter.getBoundingClientRect().top)<Math.abs(best.getBoundingClientRect().top)?chapter:best
+  ,chapters[0]);
+  const direction=event.deltaY>0?1:-1;
+  const canScrollInside=direction>0
+    ? current.scrollTop+current.clientHeight<current.scrollHeight-2
+    : current.scrollTop>2;
+  if(canScrollInside)return;
+  const index=chapters.indexOf(current);
+  const next=chapters[index+direction];
+  if(!next)return;
+  event.preventDefault();
+  wheelLocked=true;
+  next.scrollIntoView({behavior:'smooth',block:'start'});
+  setTimeout(()=>{wheelLocked=false},650);
+},{passive:false});
 </script>
 </body>
 </html>
