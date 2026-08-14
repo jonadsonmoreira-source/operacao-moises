@@ -29,8 +29,13 @@ body{
 body.auth-pending{visibility:hidden}
 .account-bar{position:fixed;top:14px;right:14px;z-index:40;display:flex;align-items:center;gap:10px;padding:8px 10px 8px 14px;border-radius:999px;background:rgba(255,255,255,.94);box-shadow:0 10px 30px rgba(45,20,55,.16);font-size:11px;color:var(--muted)}
 .account-bar button{border:0;border-radius:999px;padding:8px 12px;background:#51206a;color:#fff;font-weight:900;cursor:pointer}
+.account-bar .invite-button{display:none;background:linear-gradient(90deg,var(--pink),var(--purple))}
 .sync-state{position:fixed;left:14px;bottom:14px;z-index:40;padding:8px 12px;border-radius:999px;background:rgba(35,23,43,.9);color:#fff;font-size:10px;font-weight:800;opacity:0;transition:.2s}
 .sync-state.show{opacity:1}
+.access-modal{position:fixed;inset:0;z-index:100;display:none;place-items:center;padding:20px;background:rgba(35,23,43,.58);backdrop-filter:blur(5px)}
+.access-modal.open{display:grid}.access-card{width:min(440px,100%);padding:28px;border-radius:24px;background:#fff;box-shadow:0 28px 80px rgba(35,23,43,.3)}
+.access-card h3{margin:0 0 8px;font-size:28px;letter-spacing:-.04em;color:#51206a}.access-card p{margin:0 0 20px;color:var(--muted);font-size:13px;line-height:1.5}
+.access-card input{width:100%;padding:13px;border:1px solid var(--line);border-radius:12px;font:inherit}.access-actions{display:flex;gap:9px;margin-top:14px}.access-actions button{flex:1;padding:12px;border:0;border-radius:12px;font-weight:900;cursor:pointer}.access-actions .send{background:linear-gradient(90deg,var(--pink),var(--purple));color:#fff}.access-message{min-height:20px;margin-top:12px;font-size:12px;color:var(--muted)}
 .chapter{
   min-height:100vh;
   min-height:100svh;
@@ -272,8 +277,17 @@ select{
 </head>
 <body class="auth-pending">
 
-<div class="account-bar"><span id="accountEmail"></span><button id="logoutButton" type="button">Sair</button></div>
+<div class="account-bar"><span id="accountEmail"></span><button class="invite-button" id="inviteButton" type="button">Gerenciar acessos</button><button id="logoutButton" type="button">Sair</button></div>
 <div class="sync-state" id="syncState">Sincronizando…</div>
+<div class="access-modal" id="accessModal" role="dialog" aria-modal="true" aria-labelledby="accessTitle">
+  <div class="access-card">
+    <h3 id="accessTitle">Novo acesso</h3>
+    <p>Informe o e-mail da pessoa. Ela receberá um convite para criar a própria senha e acessar a Operação Moisés.</p>
+    <input id="inviteEmail" type="email" autocomplete="email" placeholder="email@empresa.com">
+    <div class="access-actions"><button id="cancelInvite" type="button">Cancelar</button><button class="send" id="sendInvite" type="button">Enviar convite</button></div>
+    <div class="access-message" id="accessMessage"></div>
+  </div>
+</div>
 
 <nav class="chapter-index">
   <a href="#c1"></a><a href="#c2"></a><a href="#c3"></a><a href="#c4"></a>
@@ -544,6 +558,23 @@ document.getElementById('logoutButton').addEventListener('click',async()=>{
   await db.auth.signOut();
   location.replace(loginUrl());
 });
+const accessModal=elId=>document.getElementById(elId);
+accessModal('inviteButton').addEventListener('click',()=>{accessModal('accessModal').classList.add('open');accessModal('inviteEmail').focus()});
+accessModal('cancelInvite').addEventListener('click',()=>{accessModal('accessModal').classList.remove('open');accessModal('accessMessage').textContent=''});
+accessModal('sendInvite').addEventListener('click',sendUserInvite);
+async function checkAdminAccess(){
+  const {data}=await db.from('moises_admins').select('user_id').eq('user_id',currentUser.id).maybeSingle();
+  if(data)accessModal('inviteButton').style.display='inline-block';
+}
+async function sendUserInvite(){
+  const email=accessModal('inviteEmail').value.trim(),button=accessModal('sendInvite'),message=accessModal('accessMessage');
+  if(!email){message.textContent='Informe o e-mail da pessoa.';return}
+  button.disabled=true;button.textContent='Enviando…';message.textContent='';
+  const {data,error}=await db.functions.invoke('invite-moises-user',{body:{email}});
+  button.disabled=false;button.textContent='Enviar convite';
+  if(error||data?.error){message.textContent=data?.error||'Não foi possível enviar o convite.';return}
+  message.textContent='Convite enviado com sucesso.';accessModal('inviteEmail').value='';
+}
 db.auth.onAuthStateChange((event,session)=>{
   if(event==='SIGNED_OUT'||!session) location.replace(loginUrl());
 });
@@ -728,6 +759,7 @@ function renderDaily(){
 ['budget','days'].forEach(id=>document.getElementById(id)?.addEventListener('input',renderDaily));
 async function boot(){
   if(!await requireAuth())return;
+  await checkAdminAccess();
   await loadCloudData();
   initCalculator();
   renderDaily();
