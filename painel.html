@@ -37,7 +37,7 @@ body.auth-pending{visibility:hidden}
 .access-card h3{margin:0 0 8px;font-size:28px;letter-spacing:-.04em;color:#51206a}.access-card p{margin:0 0 20px;color:var(--muted);font-size:13px;line-height:1.5}
 .access-card input{width:100%;padding:13px;border:1px solid var(--line);border-radius:12px;font:inherit}.access-actions{display:flex;gap:9px;margin-top:14px}.access-actions button{flex:1;padding:12px;border:0;border-radius:12px;font-weight:900;cursor:pointer}.access-actions .send{background:linear-gradient(90deg,var(--pink),var(--purple));color:#fff}.access-message{min-height:20px;margin-top:12px;font-size:12px;color:var(--muted)}
 .summary-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px}.summary-badge{padding:10px 14px;border-radius:999px;background:#fff;color:#51206a;border:1px solid var(--line);font-size:11px;font-weight:950;white-space:nowrap}
-.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:24px}.summary-card{padding:20px;border-radius:21px;background:#fff;border:1px solid var(--line);box-shadow:0 14px 35px rgba(86,45,94,.07)}.summary-card small{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.09em;font-weight:900;color:var(--muted)}.summary-card strong{display:block;margin-top:9px;font-size:clamp(24px,2.7vw,38px);color:#51206a;letter-spacing:-.045em}.summary-reading{margin-top:14px;padding:23px;border-radius:24px;background:linear-gradient(135deg,#fff,#fff4f8);border:1px solid var(--line)}.summary-reading h3{margin:0;color:#51206a;font-size:clamp(23px,3vw,38px);letter-spacing:-.04em}.summary-reading p{margin:9px 0 0;color:var(--muted);font-size:15px;line-height:1.55}.summary-action{margin-top:12px;padding:15px 18px;border-left:4px solid var(--pink);border-radius:0 15px 15px 0;background:#fff;font-size:13px;font-weight:750;line-height:1.5}
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:24px}.summary-card{padding:20px;border-radius:21px;background:#fff;border:1px solid var(--line);box-shadow:0 14px 35px rgba(86,45,94,.07)}.summary-card small{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.09em;font-weight:900;color:var(--muted)}.summary-card strong{display:block;margin-top:9px;font-size:clamp(24px,2.7vw,38px);color:#51206a;letter-spacing:-.045em}.summary-card span{display:block;margin-top:6px;font-size:11px;line-height:1.35;color:var(--muted)}.summary-reading{margin-top:14px;padding:23px;border-radius:24px;background:linear-gradient(135deg,#fff,#fff4f8);border:1px solid var(--line)}.summary-reading h3{margin:0;color:#51206a;font-size:clamp(23px,3vw,38px);letter-spacing:-.04em}.summary-reading p{margin:9px 0 0;color:var(--muted);font-size:15px;line-height:1.55}.summary-action{margin-top:12px;padding:15px 18px;border-left:4px solid var(--pink);border-radius:0 15px 15px 0;background:#fff;color:var(--ink);font-size:13px;font-weight:750;line-height:1.5}
 .chapter{
   min-height:100vh;
   min-height:100svh;
@@ -294,7 +294,7 @@ select{
 
 <nav class="chapter-index">
   <a href="#c1"></a><a href="#c2"></a><a href="#c3"></a><a href="#c4"></a>
-  <a href="#c5"></a><a href="#c6"></a><a href="#c7"></a><a href="#c8"></a><a href="#c9"></a>
+  <a href="#c5"></a><a href="#c6"></a><a href="#c7"></a><a href="#c8"></a><a href="#c9"></a><a href="#c10"></a>
 </nav>
 
 <section id="c1" class="chapter hero">
@@ -553,9 +553,30 @@ select{
   </div>
 </section>
 
-<section id="c9" class="chapter soft">
+<section id="c9" class="chapter dark">
+  <div class="inner reveal">
+    <div class="summary-head">
+      <div><div class="kicker">Capítulo 08 — Plano diário</div><h2>Quanto gastar.<br>Quanto vender.</h2></div>
+      <div class="summary-badge" id="planDaysBadge">Aguardando dados</div>
+    </div>
+    <p class="lead">O ritmo necessário daqui para frente para fechar o mês com economia sem perder o limite mínimo de faturamento.</p>
+    <div class="summary-grid">
+      <div class="summary-card"><small>Teto diário de mídia</small><strong id="planMediaCeiling">—</strong><span id="planMediaCeilingText">por dia restante</span></div>
+      <div class="summary-card"><small>Venda mínima diária</small><strong id="planMinimumSale">—</strong><span>para manter a economia</span></div>
+      <div class="summary-card"><small>Venda diária para meta cheia</small><strong id="planFullTargetSale">—</strong><span>para preservar todo o faturamento-base</span></div>
+      <div class="summary-card"><small>Economia-alvo do mês</small><strong id="planSavingTarget">—</strong><span>base anterior menos orçamento escolhido</span></div>
+    </div>
+    <div class="summary-reading" id="planReadingBox">
+      <h3 id="planTitle">Aguardando informações</h3>
+      <p id="planText">Registre vendas e mídia para calcular o ritmo necessário.</p>
+    </div>
+    <div class="summary-action"><strong>Ação para agora:</strong> <span id="planAction">Complete os registros do período.</span></div>
+  </div>
+</section>
+
+<section id="c10" class="chapter soft">
   <div class="inner cta reveal">
-    <div class="kicker">Capítulo 08 — Direção</div>
+    <div class="kicker">Capítulo 09 — Direção</div>
     <h2>Menos dependência.<br>Mais valor.</h2>
     <p>O objetivo não é simplesmente reduzir mídia. É descobrir o menor investimento capaz de preservar o maior faturamento possível e usar o excedente para fortalecer marca, conteúdo, orgânico e outras operações do grupo.</p>
   </div>
@@ -795,6 +816,7 @@ function renderDaily(){
  const confidence=matched.length>=7?'base mais consistente':matched.length>=3?'leitura parcial':'leitura preliminar';document.getElementById('matchedDaysConfidence').textContent=matched.length+' dias combinados • '+confidence;const diagBox=document.getElementById('savingDiagnosisBox');
  if(!matched.length){document.getElementById('savingDiagnosis').textContent='Aguardando dados';document.getElementById('savingDiagnosisText').textContent='Registre vendas e mídia dos mesmos dias para calcular.';document.getElementById('additionalSavingText').textContent='estimativa para teste';diagBox.style.background=''}else if(additionalPotential>0&&proj>=base.revenue){document.getElementById('savingDiagnosis').textContent='Economia possível';document.getElementById('savingDiagnosisText').textContent=`No ritmo atual, existe potencial estimado de reduzir ${brl(additionalPotential)} em mídia e ainda preservar o faturamento-base. Faça o corte de forma gradual.`;document.getElementById('additionalSavingText').textContent='potencial no ritmo atual';diagBox.style.background='#f1fff7'}else if(proj>=minMonthly){document.getElementById('savingDiagnosis').textContent='Dentro do necessário';document.getElementById('savingDiagnosisText').textContent='O ritmo de vendas está na zona segura, mas ainda não há sobra clara de mídia para reduzir.';document.getElementById('additionalSavingText').textContent='sem sobra clara no momento';diagBox.style.background='#fff8ec'}else{document.getElementById('savingDiagnosis').textContent='Sem margem para reduzir';document.getElementById('savingDiagnosisText').textContent='A projeção de vendas ainda não sustenta um novo corte de mídia com segurança.';document.getElementById('additionalSavingText').textContent='não recomendado agora';diagBox.style.background='#fff3f7'}
  renderGeneralSummary({salesDays:sD,mediaDays:mD,matchedDays:matched.length,revenueProjection:proj,mediaProjection:mp,projectedSaving,additionalPotential,minMonthly,matchedRoas});
+ renderDailyPlan({salesTotal:sT,mediaTotal:mT,salesDays:sD,mediaDays:mD,totalDays:days,budget,minMonthly,validMargin});
 }
 function renderGeneralSummary(data){
  const ready=data.salesDays>0&&data.mediaDays>0,coverage=Math.min(data.salesDays,data.mediaDays),revenuePct=base.revenue?data.revenueProjection/base.revenue*100:0;
@@ -805,6 +827,18 @@ function renderGeneralSummary(data){
  else if(data.revenueProjection>=base.revenue){document.getElementById('summaryTitle').textContent='Faturamento forte, mídia elevada';document.getElementById('summaryText').textContent=`O faturamento projeta ${compact(data.revenueProjection)}, mas o gasto de mídia está ${brl(Math.abs(data.projectedSaving))} acima da base. As vendas estão boas, porém ainda não existe economia realizada.`;document.getElementById('summaryAction').textContent=data.additionalPotential>0?`Teste uma redução gradual próxima de ${brl(data.additionalPotential)} e valide o impacto nas vendas.`:'Não aumente o investimento; mantenha e observe a eficiência dos próximos dias.';box.style.background='#fff8ec'}
  else if(data.revenueProjection>=data.minMonthly&&data.projectedSaving>0){document.getElementById('summaryTitle').textContent='Economia com faturamento em zona segura';document.getElementById('summaryText').textContent=`O mês projeta ${pct(revenuePct)} do faturamento-base e economia de ${brl(data.projectedSaving)} em mídia. O resultado está abaixo da meta cheia, mas ainda dentro do limite econômico calculado.`;document.getElementById('summaryAction').textContent='Mantenha o nível atual de mídia até confirmar que as vendas permanecem na zona segura.';box.style.background='#fff8ec'}
  else{document.getElementById('summaryTitle').textContent='Atenção ao ritmo atual';document.getElementById('summaryText').textContent=`O faturamento projeta ${compact(data.revenueProjection)} e ainda não sustenta uma nova redução com segurança. A prioridade agora é recuperar o ritmo de vendas e acompanhar a eficiência.`;document.getElementById('summaryAction').textContent='Não reduza mídia neste momento; revise os próximos dias antes de mudar o orçamento.';box.style.background='#fff3f7'}
+}
+function renderDailyPlan(data){
+ const remainingMediaDays=Math.max(data.totalDays-data.mediaDays,0),remainingSalesDays=Math.max(data.totalDays-data.salesDays,0),remainingBudget=data.budget-data.mediaTotal,remainingMinimum=Math.max(data.minMonthly-data.salesTotal,0),remainingFull=Math.max(base.revenue-data.salesTotal,0),mediaCeiling=remainingMediaDays?Math.max(remainingBudget/remainingMediaDays,0):0,minimumSale=remainingSalesDays?remainingMinimum/remainingSalesDays:0,fullTargetSale=remainingSalesDays?remainingFull/remainingSalesDays:0,savingTarget=base.spend-data.budget;
+ const ready=data.salesDays>0&&data.mediaDays>0;
+ document.getElementById('planDaysBadge').textContent=ready?`${remainingSalesDays} dias de venda • ${remainingMediaDays} dias de mídia`:'Aguardando dados';
+ document.getElementById('planMediaCeiling').textContent=ready?brl(mediaCeiling):'—';document.getElementById('planMinimumSale').textContent=ready&&data.validMargin?(remainingMinimum>0?brl(minimumSale):'Mínimo alcançado'):'—';document.getElementById('planFullTargetSale').textContent=ready?(remainingFull>0?brl(fullTargetSale):'Meta alcançada'):'—';document.getElementById('planSavingTarget').textContent=savingTarget>=0?brl(savingTarget):'Sem economia';document.getElementById('planMediaCeilingText').textContent=remainingMediaDays?`máximo por dia nos ${remainingMediaDays} dias restantes`:'período encerrado';
+ const box=document.getElementById('planReadingBox');
+ if(!data.validMargin){document.getElementById('planTitle').textContent='Defina a margem de contribuição';document.getElementById('planText').textContent='A venda mínima econômica depende da margem real da operação.';document.getElementById('planAction').textContent='Informe a margem antes de tomar uma decisão sobre redução de mídia.';box.style.background='#fff8ec';return}
+ if(!ready){document.getElementById('planTitle').textContent='Aguardando informações';document.getElementById('planText').textContent='Registre vendas e mídia para calcular o ritmo necessário.';document.getElementById('planAction').textContent='Complete os registros do período.';box.style.background='';return}
+ if(remainingBudget<=0){document.getElementById('planTitle').textContent='Orçamento econômico já consumido';document.getElementById('planText').textContent=`O gasto acumulado já alcançou ou ultrapassou o orçamento escolhido de ${brl(data.budget)}.`;document.getElementById('planAction').textContent='Não aumente o gasto diário. Reavalie o orçamento e preserve as campanhas essenciais.';box.style.background='#fff3f7'}
+ else if(remainingMinimum<=0){document.getElementById('planTitle').textContent='Mínimo econômico já alcançado';document.getElementById('planText').textContent=`O faturamento acumulado já atingiu o mínimo econômico. Ainda restam ${brl(Math.max(remainingBudget,0))} de mídia dentro do orçamento escolhido.`;document.getElementById('planAction').textContent=`Use até ${brl(mediaCeiling)} por dia como teto e acompanhe se a meta cheia também será alcançada.`;box.style.background='#f1fff7'}
+ else{document.getElementById('planTitle').textContent='Ritmo necessário daqui para frente';document.getElementById('planText').textContent=`Para fechar o mês com a economia-alvo, gaste no máximo ${brl(mediaCeiling)} por dia e venda ao menos ${brl(minimumSale)} por dia nos dias restantes.`;document.getElementById('planAction').textContent=`Se buscar preservar toda a base de faturamento, a referência sobe para ${brl(fullTargetSale)} em vendas por dia.`;box.style.background='#fff8ec'}
 }
 ['budget','days'].forEach(id=>document.getElementById(id)?.addEventListener('input',renderDaily));
 async function boot(){
