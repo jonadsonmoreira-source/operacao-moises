@@ -36,6 +36,8 @@ body.auth-pending{visibility:hidden}
 .access-modal.open{display:grid}.access-card{width:min(440px,100%);padding:28px;border-radius:24px;background:#fff;box-shadow:0 28px 80px rgba(35,23,43,.3)}
 .access-card h3{margin:0 0 8px;font-size:28px;letter-spacing:-.04em;color:#51206a}.access-card p{margin:0 0 20px;color:var(--muted);font-size:13px;line-height:1.5}
 .access-card input{width:100%;padding:13px;border:1px solid var(--line);border-radius:12px;font:inherit}.access-actions{display:flex;gap:9px;margin-top:14px}.access-actions button{flex:1;padding:12px;border:0;border-radius:12px;font-weight:900;cursor:pointer}.access-actions .send{background:linear-gradient(90deg,var(--pink),var(--purple));color:#fff}.access-message{min-height:20px;margin-top:12px;font-size:12px;color:var(--muted)}
+.summary-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px}.summary-badge{padding:10px 14px;border-radius:999px;background:#fff;color:#51206a;border:1px solid var(--line);font-size:11px;font-weight:950;white-space:nowrap}
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:24px}.summary-card{padding:20px;border-radius:21px;background:#fff;border:1px solid var(--line);box-shadow:0 14px 35px rgba(86,45,94,.07)}.summary-card small{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.09em;font-weight:900;color:var(--muted)}.summary-card strong{display:block;margin-top:9px;font-size:clamp(24px,2.7vw,38px);color:#51206a;letter-spacing:-.045em}.summary-reading{margin-top:14px;padding:23px;border-radius:24px;background:linear-gradient(135deg,#fff,#fff4f8);border:1px solid var(--line)}.summary-reading h3{margin:0;color:#51206a;font-size:clamp(23px,3vw,38px);letter-spacing:-.04em}.summary-reading p{margin:9px 0 0;color:var(--muted);font-size:15px;line-height:1.55}.summary-action{margin-top:12px;padding:15px 18px;border-left:4px solid var(--pink);border-radius:0 15px 15px 0;background:#fff;font-size:13px;font-weight:750;line-height:1.5}
 .chapter{
   min-height:100vh;
   min-height:100svh;
@@ -231,9 +233,10 @@ select{
 .chapter-index a.active{height:28px;border-radius:999px;background:var(--pink)}
 .hero + .chapter-index a{background:rgba(255,255,255,.4)}
 @media(max-width:900px){
-  .metrics,.compare,.calc{grid-template-columns:1fr}
+  .metrics,.compare,.calc,.summary-grid{grid-template-columns:1fr}
   .flow{grid-template-columns:1fr}
   .arrow{transform:rotate(90deg)}
+  .summary-head{align-items:flex-start;flex-direction:column}
 }
 @media(max-width:600px){
   .chapter{padding:34px 16px}
@@ -291,7 +294,7 @@ select{
 
 <nav class="chapter-index">
   <a href="#c1"></a><a href="#c2"></a><a href="#c3"></a><a href="#c4"></a>
-  <a href="#c5"></a><a href="#c6"></a><a href="#c7"></a><a href="#c8"></a>
+  <a href="#c5"></a><a href="#c6"></a><a href="#c7"></a><a href="#c8"></a><a href="#c9"></a>
 </nav>
 
 <section id="c1" class="chapter hero">
@@ -530,9 +533,29 @@ select{
   </div>
 </section>
 
-<section id="c8" class="chapter soft">
+<section id="c8" class="chapter light">
+  <div class="inner reveal">
+    <div class="summary-head">
+      <div><div class="kicker">Capítulo 07 — Resumo geral</div><h2>Como está<br>o mês agora?</h2></div>
+      <div class="summary-badge" id="summaryConfidence">Aguardando dados</div>
+    </div>
+    <div class="summary-grid">
+      <div class="summary-card"><small>Faturamento projetado</small><strong id="summaryRevenue">—</strong></div>
+      <div class="summary-card"><small>Gasto de mídia projetado</small><strong id="summaryMedia">—</strong></div>
+      <div class="summary-card"><small>Economia vs. base</small><strong id="summarySaving">—</strong></div>
+      <div class="summary-card"><small>Potencial adicional</small><strong id="summaryPotential">—</strong></div>
+    </div>
+    <div class="summary-reading" id="summaryReadingBox">
+      <h3 id="summaryTitle">Aguardando informações</h3>
+      <p id="summaryText">Registre vendas e gastos de mídia para gerar a leitura geral do mês.</p>
+    </div>
+    <div class="summary-action"><strong>Direção recomendada:</strong> <span id="summaryAction">Complete os registros diários antes de alterar o investimento.</span></div>
+  </div>
+</section>
+
+<section id="c9" class="chapter soft">
   <div class="inner cta reveal">
-    <div class="kicker">Capítulo 05 — Direção</div>
+    <div class="kicker">Capítulo 08 — Direção</div>
     <h2>Menos dependência.<br>Mais valor.</h2>
     <p>O objetivo não é simplesmente reduzir mídia. É descobrir o menor investimento capaz de preservar o maior faturamento possível e usar o excedente para fortalecer marca, conteúdo, orgânico e outras operações do grupo.</p>
   </div>
@@ -771,6 +794,17 @@ function renderDaily(){
  document.getElementById('currentMediaSaving').textContent=matched.length?(projectedSaving>=0?'+ ':'- ')+brl(Math.abs(projectedSaving)):'—';document.getElementById('currentMediaSavingText').textContent=matched.length?(projectedSaving>=0?'economia projetada contra a base anterior':'gasto projetado acima da base anterior'):'aguardando dados combinados';document.getElementById('requiredMediaAtCurrentRoas').textContent=matchedRoas?brl(requiredMedia):'—';document.getElementById('additionalSavingPotential').textContent=matchedRoas?brl(additionalPotential):'—';document.getElementById('matchedDaysRoas').textContent=matchedRoas?matchedRoas.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'x':'—';
  const confidence=matched.length>=7?'base mais consistente':matched.length>=3?'leitura parcial':'leitura preliminar';document.getElementById('matchedDaysConfidence').textContent=matched.length+' dias combinados • '+confidence;const diagBox=document.getElementById('savingDiagnosisBox');
  if(!matched.length){document.getElementById('savingDiagnosis').textContent='Aguardando dados';document.getElementById('savingDiagnosisText').textContent='Registre vendas e mídia dos mesmos dias para calcular.';document.getElementById('additionalSavingText').textContent='estimativa para teste';diagBox.style.background=''}else if(additionalPotential>0&&proj>=base.revenue){document.getElementById('savingDiagnosis').textContent='Economia possível';document.getElementById('savingDiagnosisText').textContent=`No ritmo atual, existe potencial estimado de reduzir ${brl(additionalPotential)} em mídia e ainda preservar o faturamento-base. Faça o corte de forma gradual.`;document.getElementById('additionalSavingText').textContent='potencial no ritmo atual';diagBox.style.background='#f1fff7'}else if(proj>=minMonthly){document.getElementById('savingDiagnosis').textContent='Dentro do necessário';document.getElementById('savingDiagnosisText').textContent='O ritmo de vendas está na zona segura, mas ainda não há sobra clara de mídia para reduzir.';document.getElementById('additionalSavingText').textContent='sem sobra clara no momento';diagBox.style.background='#fff8ec'}else{document.getElementById('savingDiagnosis').textContent='Sem margem para reduzir';document.getElementById('savingDiagnosisText').textContent='A projeção de vendas ainda não sustenta um novo corte de mídia com segurança.';document.getElementById('additionalSavingText').textContent='não recomendado agora';diagBox.style.background='#fff3f7'}
+ renderGeneralSummary({salesDays:sD,mediaDays:mD,matchedDays:matched.length,revenueProjection:proj,mediaProjection:mp,projectedSaving,additionalPotential,minMonthly,matchedRoas});
+}
+function renderGeneralSummary(data){
+ const ready=data.salesDays>0&&data.mediaDays>0,coverage=Math.min(data.salesDays,data.mediaDays),revenuePct=base.revenue?data.revenueProjection/base.revenue*100:0;
+ document.getElementById('summaryRevenue').textContent=ready?compact(data.revenueProjection):'—';document.getElementById('summaryMedia').textContent=ready?brl(data.mediaProjection):'—';document.getElementById('summarySaving').textContent=ready?(data.projectedSaving>=0?'+ ':'- ')+brl(Math.abs(data.projectedSaving)):'—';document.getElementById('summaryPotential').textContent=data.matchedDays?brl(data.additionalPotential):'—';
+ document.getElementById('summaryConfidence').textContent=!ready?'Aguardando dados':coverage>=7?'Leitura mais consistente':coverage>=3?'Leitura parcial':'Leitura preliminar';const box=document.getElementById('summaryReadingBox');
+ if(!ready){document.getElementById('summaryTitle').textContent='Aguardando informações';document.getElementById('summaryText').textContent='Registre vendas e gastos de mídia para gerar a leitura geral do mês.';document.getElementById('summaryAction').textContent='Complete os registros diários antes de alterar o investimento.';box.style.background='';return}
+ if(data.revenueProjection>=base.revenue&&data.projectedSaving>0){document.getElementById('summaryTitle').textContent='Mês forte e mais eficiente';document.getElementById('summaryText').textContent=`O faturamento projeta ${compact(data.revenueProjection)}, acima da base, enquanto a mídia projeta economia de ${brl(data.projectedSaving)}. O desempenho atual combina manutenção de vendas com redução de investimento.`;document.getElementById('summaryAction').textContent=data.additionalPotential>0?`Há potencial adicional estimado de ${brl(data.additionalPotential)}, mas teste reduções pequenas e acompanhe diariamente.`:'Mantenha o orçamento atual e acompanhe se o ritmo continua acima da base.';box.style.background='#f1fff7'}
+ else if(data.revenueProjection>=base.revenue){document.getElementById('summaryTitle').textContent='Faturamento forte, mídia elevada';document.getElementById('summaryText').textContent=`O faturamento projeta ${compact(data.revenueProjection)}, mas o gasto de mídia está ${brl(Math.abs(data.projectedSaving))} acima da base. As vendas estão boas, porém ainda não existe economia realizada.`;document.getElementById('summaryAction').textContent=data.additionalPotential>0?`Teste uma redução gradual próxima de ${brl(data.additionalPotential)} e valide o impacto nas vendas.`:'Não aumente o investimento; mantenha e observe a eficiência dos próximos dias.';box.style.background='#fff8ec'}
+ else if(data.revenueProjection>=data.minMonthly&&data.projectedSaving>0){document.getElementById('summaryTitle').textContent='Economia com faturamento em zona segura';document.getElementById('summaryText').textContent=`O mês projeta ${pct(revenuePct)} do faturamento-base e economia de ${brl(data.projectedSaving)} em mídia. O resultado está abaixo da meta cheia, mas ainda dentro do limite econômico calculado.`;document.getElementById('summaryAction').textContent='Mantenha o nível atual de mídia até confirmar que as vendas permanecem na zona segura.';box.style.background='#fff8ec'}
+ else{document.getElementById('summaryTitle').textContent='Atenção ao ritmo atual';document.getElementById('summaryText').textContent=`O faturamento projeta ${compact(data.revenueProjection)} e ainda não sustenta uma nova redução com segurança. A prioridade agora é recuperar o ritmo de vendas e acompanhar a eficiência.`;document.getElementById('summaryAction').textContent='Não reduza mídia neste momento; revise os próximos dias antes de mudar o orçamento.';box.style.background='#fff3f7'}
 }
 ['budget','days'].forEach(id=>document.getElementById(id)?.addEventListener('input',renderDaily));
 async function boot(){
