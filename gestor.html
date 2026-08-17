@@ -20,7 +20,7 @@
   <main class="shell">
     <header class="top">
       <div class="brand"><small>Operação Moisés</small><h1>Painel do Gestor de Tráfego</h1><p>Veja a orientação do dia e registre os números da plataforma de anúncios.</p><p class="account-line" id="account">Carregando acesso…</p></div>
-      <div class="actions"><a href="./painel.html">Visão estratégica</a><button id="logout" type="button">Sair</button></div>
+      <div class="actions"><a id="adminLink" href="./painel.html" hidden>Painel completo</a><button id="logout" type="button">Sair</button></div>
     </header>
     <div class="grid">
       <section class="card full">
@@ -95,7 +95,7 @@
     async function load(){
       const {data:{session}}=await db.auth.getSession();if(!session){location.replace(loginUrl());return}user=session.user;
       const {data:member,error:memberError}=await db.from('moises_workspace_members').select('workspace_id,role').eq('user_id',user.id).single();if(memberError||!member){alert('Seu acesso ainda não está vinculado à operação.');return}
-      workspaceId=member.workspace_id;$('account').textContent=`${user.email} • ${member.role==='admin'?'Administrador':'Gestor de tráfego'}`;
+      if(!['admin','traffic_manager'].includes(member.role)){location.replace(member.role==='viewer'?'./apresentacao.html':'./index.html');return}workspaceId=member.workspace_id;$('account').textContent=`${user.email} • ${member.role==='admin'?'Administrador':'Gestor de tráfego'}`;$('adminLink').hidden=member.role!=='admin';
       if(!await reloadData()){alert('Não foi possível carregar os dados.');return}$('date').value=today();fillDate($('date').value);render();subscribeRealtime();document.body.classList.remove('auth-pending');
     }
     async function reloadData(){const [{data:guide,error:guideError},{data:daily,error:dailyError}]=await Promise.all([db.from('moises_traffic_guidance').select('*').eq('workspace_id',workspaceId).single(),db.from('moises_daily_metrics').select('workspace_id,record_date,media_spend,leads,clicks,impressions,action_note,updated_at').eq('workspace_id',workspaceId).order('record_date')]);if(guideError||dailyError)return false;guidance=guide;records=daily||[];return true}
