@@ -37,10 +37,8 @@
         <div class="eyebrow">Registro operacional</div><h2>Desempenho do dia</h2>
         <form id="dailyForm">
           <div class="field wide"><label for="date">Data</label><input id="date" type="date" required></div>
-          <div class="field"><label for="media">Gasto em mídia (R$)</label><input id="media" type="number" min="0" step="0.01" required></div>
-          <div class="field"><label for="sales">Vendas (R$)</label><input id="sales" type="number" min="0" step="0.01" required></div>
+          <div class="field wide"><label for="media">Gasto em mídia (R$)</label><input id="media" type="number" min="0" step="0.01" required></div>
           <div class="field"><label for="leads">Leads</label><input id="leads" type="number" min="0" step="1"></div>
-          <div class="field"><label for="orders">Pedidos</label><input id="orders" type="number" min="0" step="1"></div>
           <div class="field"><label for="clicks">Cliques</label><input id="clicks" type="number" min="0" step="1"></div>
           <div class="field"><label for="impressions">Impressões</label><input id="impressions" type="number" min="0" step="1"></div>
           <div class="field wide"><label for="note">O que foi ajustado hoje?</label><textarea id="note" placeholder="Ex.: reduzi o orçamento da campanha X e mantive o criativo Y."></textarea></div>
@@ -86,7 +84,7 @@
       $('history').innerHTML=records.length?[...records].reverse().map(r=>`<tr><td>${r.record_date.split('-').reverse().join('/')}</td><td>${brl(r.media_spend)}</td><td>${brl(r.sales)}</td><td>${num(r.media_spend)?precise(num(r.sales)/num(r.media_spend))+'x':'—'}</td><td>${num(r.leads).toLocaleString('pt-BR')}</td><td>${num(r.leads)?brl(num(r.media_spend)/num(r.leads)):'—'}</td><td class="note">${escapeHtml(r.action_note||'—')}</td></tr>`).join(''):'<tr><td colspan="7" class="empty">Nenhum desempenho registrado.</td></tr>';
     }
     function escapeHtml(value){const d=document.createElement('div');d.textContent=value;return d.innerHTML}
-    function fillDate(date){const r=records.find(x=>x.record_date===date);['media','sales','leads','orders','clicks','impressions'].forEach(k=>$(k).value=r?num(r[k==='media'?'media_spend':k]):'');$('note').value=r?.action_note||''}
+    function fillDate(date){const r=records.find(x=>x.record_date===date);['media','leads','clicks','impressions'].forEach(k=>$(k).value=r?num(r[k==='media'?'media_spend':k]):'');$('note').value=r?.action_note||''}
     async function load(){
       const {data:{session}}=await db.auth.getSession();if(!session){location.replace(loginUrl());return}user=session.user;
       const {data:member,error:memberError}=await db.from('moises_workspace_members').select('workspace_id,role').eq('user_id',user.id).single();if(memberError||!member){alert('Seu acesso ainda não está vinculado à operação.');return}
@@ -95,7 +93,7 @@
       if(configError||dailyError){alert('Não foi possível carregar os dados.');return}settings=config;records=daily||[];$('date').value=today();fillDate($('date').value);render();document.body.classList.remove('auth-pending');
     }
     $('date').addEventListener('change',e=>fillDate(e.target.value));
-    $('dailyForm').addEventListener('submit',async e=>{e.preventDefault();const button=$('save'),date=$('date').value,current=records.find(r=>r.record_date===date)||{};button.disabled=true;$('message').textContent='';showSync('Salvando…');const payload={workspace_id:workspaceId,record_date:date,media_spend:num($('media').value),sales:num($('sales').value),leads:num($('leads').value),orders:num($('orders').value),clicks:num($('clicks').value),impressions:num($('impressions').value),action_note:$('note').value.trim()||null,updated_by:user.id,updated_at:new Date().toISOString()};const {data,error}=await db.from('moises_daily_metrics').upsert(payload,{onConflict:'workspace_id,record_date'}).select().single();button.disabled=false;if(error){$('message').textContent='Não foi possível salvar. Tente novamente.';showSync('Falha ao salvar');return}records=records.filter(r=>r.record_date!==date).concat(data).sort((a,b)=>a.record_date.localeCompare(b.record_date));$('message').textContent='Desempenho salvo e painel atualizado.';showSync('Dados sincronizados');render()});
+    $('dailyForm').addEventListener('submit',async e=>{e.preventDefault();const button=$('save'),date=$('date').value,current=records.find(r=>r.record_date===date)||{};button.disabled=true;$('message').textContent='';showSync('Salvando…');const payload={workspace_id:workspaceId,record_date:date,media_spend:num($('media').value),leads:num($('leads').value),clicks:num($('clicks').value),impressions:num($('impressions').value),action_note:$('note').value.trim()||null,updated_by:user.id,updated_at:new Date().toISOString()};const {data,error}=await db.from('moises_daily_metrics').upsert(payload,{onConflict:'workspace_id,record_date'}).select().single();button.disabled=false;if(error){$('message').textContent='Não foi possível salvar. Tente novamente.';showSync('Falha ao salvar');return}records=records.filter(r=>r.record_date!==date).concat(data).sort((a,b)=>a.record_date.localeCompare(b.record_date));$('message').textContent='Desempenho de mídia salvo. Vendas e pedidos permanecem sob responsabilidade do administrador.';showSync('Dados sincronizados');render()});
     $('logout').addEventListener('click',async()=>{await db.auth.signOut();location.replace(loginUrl())});db.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||!session)location.replace(loginUrl())});load();
   </script>
 </body>
