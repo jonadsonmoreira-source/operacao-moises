@@ -29,6 +29,7 @@ body{
 body.auth-pending{visibility:hidden}
 .account-bar{position:fixed;top:14px;right:14px;z-index:40;display:flex;align-items:center;gap:10px;padding:8px 10px 8px 14px;border-radius:999px;background:rgba(255,255,255,.94);box-shadow:0 10px 30px rgba(45,20,55,.16);font-size:11px;color:var(--muted)}
 .account-bar button{border:0;border-radius:999px;padding:8px 12px;background:#51206a;color:#fff;font-weight:900;cursor:pointer}
+.account-bar a{border-radius:999px;padding:8px 12px;background:#11895c;color:#fff;text-decoration:none;font-weight:900}
 .account-bar .invite-button{display:none;background:linear-gradient(90deg,var(--pink),var(--purple))}
 .sync-state{position:fixed;left:14px;bottom:14px;z-index:40;padding:8px 12px;border-radius:999px;background:rgba(35,23,43,.9);color:#fff;font-size:10px;font-weight:800;opacity:0;transition:.2s}
 .sync-state.show{opacity:1}
@@ -280,7 +281,7 @@ select{
 </head>
 <body class="auth-pending">
 
-<div class="account-bar"><span id="accountEmail"></span><button class="invite-button" id="inviteButton" type="button">Gerenciar acessos</button><button id="logoutButton" type="button">Sair</button></div>
+<div class="account-bar"><span id="accountEmail"></span><a href="./gestor.html">Painel do tráfego</a><button class="invite-button" id="inviteButton" type="button">Gerenciar acessos</button><button id="logoutButton" type="button">Sair</button></div>
 <div class="sync-state" id="syncState">Sincronizando…</div>
 <div class="access-modal" id="accessModal" role="dialog" aria-modal="true" aria-labelledby="accessTitle">
   <div class="access-card">
@@ -588,6 +589,8 @@ const SUPABASE_URL='https://nubzdbalhhqgrwjyjord.supabase.co';
 const SUPABASE_KEY='sb_publishable_TG0W0Ih25aHB2A7u0Tkdig_l6R168sd';
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let currentUser=null;
+let currentWorkspaceId=null;
+let currentRole=null;
 let dailyRecords=[];
 let settingsTimer=null;
 
@@ -612,8 +615,7 @@ accessModal('inviteButton').addEventListener('click',()=>{accessModal('accessMod
 accessModal('cancelInvite').addEventListener('click',()=>{accessModal('accessModal').classList.remove('open');accessModal('accessMessage').textContent=''});
 accessModal('sendInvite').addEventListener('click',sendUserInvite);
 async function checkAdminAccess(){
-  const {data}=await db.from('moises_admins').select('user_id').eq('user_id',currentUser.id).maybeSingle();
-  if(data)accessModal('inviteButton').style.display='inline-block';
+  if(currentRole==='admin')accessModal('inviteButton').style.display='inline-block';
 }
 async function sendUserInvite(){
   const email=accessModal('inviteEmail').value.trim(),button=accessModal('sendInvite'),message=accessModal('accessMessage');
@@ -763,38 +765,33 @@ function queueSettingsSave(){
   settingsTimer=setTimeout(saveSettings,450);
 }
 async function saveSettings(){
-  if(!currentUser)return;
+  if(!currentUser||!currentWorkspaceId||currentRole!=='admin')return;
   showSync();
-  const payload={user_id:currentUser.id,budget:+el('budget').value,days:+el('days').value,hours:+el('hours').value,retention:+el('retention').value,conversion:+el('conversion').value,margin:+el('margin').value,updated_at:new Date().toISOString()};
-  const {error}=await db.from('moises_settings').upsert(payload,{onConflict:'user_id'});
+  const payload={budget:+el('budget').value,days:+el('days').value,hours:+el('hours').value,retention:+el('retention').value,conversion:+el('conversion').value,margin:+el('margin').value,updated_at:new Date().toISOString()};
+  const {error}=await db.from('moises_workspace_config').update(payload).eq('workspace_id',currentWorkspaceId);
   showSync(error?'Falha ao sincronizar':'Dados sincronizados');
 }
 async function loadCloudData(){
-  const [{data:settings,error:settingsError},{data:records,error:recordsError},{data:baseline,error:baselineError}]=await Promise.all([
-    db.from('moises_settings').select('*').eq('user_id',currentUser.id).maybeSingle(),
-    db.from('moises_daily_records').select('record_date,sales,media_spend').eq('user_id',currentUser.id).order('record_date'),
-    db.from('moises_business_baseline').select('*').eq('user_id',currentUser.id).single()
+  const {data:membership,error:membershipError}=await db.from('moises_workspace_members').select('workspace_id,role').eq('user_id',currentUser.id).single();
+  if(membershipError||!membership){showSync('Acesso não vinculado');return false}
+  currentWorkspaceId=membership.workspace_id;currentRole=membership.role;
+  const [{data:settings,error:settingsError},{data:records,error:recordsError}]=await Promise.all([
+    db.from('moises_workspace_config').select('*').eq('workspace_id',currentWorkspaceId).single(),
+    db.from('moises_daily_metrics').select('record_date,sales,media_spend,leads,clicks,impressions,orders,action_note').eq('workspace_id',currentWorkspaceId).order('record_date')
   ]);
-  if(settingsError||recordsError||baselineError||!baseline){showSync('Falha ao carregar dados');return;}
-  Object.assign(base,baseline);base.spend=+base.spend;base.revenue=+base.revenue;base.orders=+base.orders;base.leads=+base.leads;base.previous_spend=+base.previous_spend;base.previous_revenue=+base.previous_revenue;base.ticket=base.orders?base.revenue/base.orders:0;
+  if(settingsError||recordsError||!settings){showSync('Falha ao carregar dados');return false;}
+  Object.assign(base,{period_label:settings.period_label,operating_days:+settings.operating_days,spend:+settings.base_spend,revenue:+settings.base_revenue,orders:+settings.base_orders,leads:+settings.base_leads,previous_spend:+settings.previous_spend,previous_revenue:+settings.previous_revenue});base.ticket=base.orders?base.revenue/base.orders:0;
   el('budget').max=Math.ceil(base.spend);el('budget').min=Math.max(0,Math.floor(base.spend*.5));
-  if(settings){['budget','days','hours','retention','conversion','margin'].forEach(k=>{if(settings[k]!=null&&el(k))el(k).value=settings[k]});}
-  else{
-    el('budget').value=Math.round(base.spend*.875/500)*500;
-    el('days').value=String(base.operating_days);
-    el('hours').value='13';
-    el('retention').value='95';
-    el('conversion').value='15';
-    el('margin').value='30';
-  }
-  dailyRecords=(records||[]).map(r=>({date:r.record_date,sales:Number(r.sales),media:Number(r.media_spend)}));
+  ['budget','days','hours','retention','conversion','margin'].forEach(k=>{if(settings[k]!=null&&el(k))el(k).value=settings[k]});
+  dailyRecords=(records||[]).map(r=>({date:r.record_date,sales:Number(r.sales),media:Number(r.media_spend),leads:+r.leads,clicks:+r.clicks,impressions:+r.impressions,orders:+r.orders,note:r.action_note||''}));
   renderBaseline();
+  return true;
 }
 async function upsertDaily(date,changes){
   const current=dailyRecords.find(x=>x.date===date)||{date,sales:0,media:0};
   const next={...current,...changes};
   showSync();
-  const {error}=await db.from('moises_daily_records').upsert({user_id:currentUser.id,record_date:date,sales:next.sales,media_spend:next.media,updated_at:new Date().toISOString()},{onConflict:'user_id,record_date'});
+  const {error}=await db.from('moises_daily_metrics').upsert({workspace_id:currentWorkspaceId,record_date:date,sales:next.sales,media_spend:next.media,updated_by:currentUser.id,updated_at:new Date().toISOString()},{onConflict:'workspace_id,record_date'});
   if(error){showSync('Falha ao salvar');alert('Não foi possível salvar. Tente novamente.');return false;}
   dailyRecords=dailyRecords.filter(x=>x.date!==date).concat(next).sort((a,b)=>a.date.localeCompare(b.date));
   showSync('Dados sincronizados');return true;
@@ -843,8 +840,8 @@ function renderDailyPlan(data){
 ['budget','days'].forEach(id=>document.getElementById(id)?.addEventListener('input',renderDaily));
 async function boot(){
   if(!await requireAuth())return;
+  if(!await loadCloudData())return;
   await checkAdminAccess();
-  await loadCloudData();
   initCalculator();
   renderDaily();
 }
