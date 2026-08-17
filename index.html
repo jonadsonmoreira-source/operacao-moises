@@ -9,7 +9,7 @@
     *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:var(--ink);background:radial-gradient(circle at 78% 18%,rgba(255,213,103,.75),transparent 17%),linear-gradient(135deg,#ff8a70 0%,#f4589b 34%,#9b49cf 68%,#5d34a8 100%)}
     .card{width:min(440px,100%);padding:34px;border-radius:28px;background:rgba(255,255,255,.97);box-shadow:0 28px 80px rgba(49,20,66,.28)}
     .kicker{font-size:11px;text-transform:uppercase;letter-spacing:.13em;font-weight:900;color:var(--purple)}h1{margin:10px 0 8px;font-size:44px;line-height:.95;letter-spacing:-.055em;text-transform:uppercase}h1 span{color:var(--pink)}p{margin:0 0 26px;color:var(--muted);line-height:1.5}
-    label{display:block;margin:15px 0 7px;font-size:11px;font-weight:900;color:var(--muted)}input{width:100%;padding:14px;border:1px solid var(--line);border-radius:13px;font:inherit;outline:none}input:focus{border-color:var(--pink);box-shadow:0 0 0 3px rgba(244,88,155,.12)}button{width:100%;margin-top:20px;padding:14px;border:0;border-radius:13px;background:linear-gradient(90deg,var(--pink),var(--purple));color:#fff;font-weight:900;cursor:pointer}.error{min-height:20px;margin-top:14px;color:#a33264;font-size:12px;text-align:center}.foot{margin-top:20px;text-align:center;font-size:10px;color:var(--muted)}
+    label{display:block;margin:15px 0 7px;font-size:11px;font-weight:900;color:var(--muted)}input{width:100%;padding:14px;border:1px solid var(--line);border-radius:13px;font:inherit;outline:none}input:focus{border-color:var(--pink);box-shadow:0 0 0 3px rgba(244,88,155,.12)}button{width:100%;margin-top:20px;padding:14px;border:0;border-radius:13px;background:linear-gradient(90deg,var(--pink),var(--purple));color:#fff;font-weight:900;cursor:pointer}.link-button{margin-top:10px;padding:7px;background:none;color:var(--purple);font-size:12px}.error{min-height:20px;margin-top:14px;color:#a33264;font-size:12px;text-align:center}.foot{margin-top:20px;text-align:center;font-size:10px;color:var(--muted)}.hidden{display:none}.success{color:#087a51}
   </style>
 </head>
 <body>
@@ -21,16 +21,29 @@
       <label for="email">E-mail</label><input id="email" type="email" autocomplete="email" required>
       <label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" minlength="6" required>
       <button id="submitButton" type="submit">Entrar no painel</button>
+      <button class="link-button" id="forgotButton" type="button">Esqueci minha senha</button>
       <div class="error" id="message" role="alert"></div>
+    </form>
+    <form class="hidden" id="resetForm">
+      <p>Crie uma nova senha com pelo menos 6 caracteres.</p>
+      <label for="newPassword">Nova senha</label><input id="newPassword" type="password" autocomplete="new-password" minlength="6" required>
+      <label for="confirmPassword">Confirmar nova senha</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="6" required>
+      <button id="resetButton" type="submit">Salvar nova senha</button>
+      <div class="error" id="resetMessage" role="alert"></div>
     </form>
     <div class="foot">Acesso restrito • dados protegidos por usuário</div>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.56.0/dist/umd/supabase.min.js"></script>
   <script>
     const db=window.supabase.createClient('https://nubzdbalhhqgrwjyjord.supabase.co','sb_publishable_TG0W0Ih25aHB2A7u0Tkdig_l6R168sd');
-    const form=document.getElementById('loginForm'),button=document.getElementById('submitButton'),message=document.getElementById('message');
-    db.auth.getSession().then(({data:{session}})=>{if(session)location.replace('./painel.html')});
+    const form=document.getElementById('loginForm'),button=document.getElementById('submitButton'),message=document.getElementById('message'),resetForm=document.getElementById('resetForm'),resetMessage=document.getElementById('resetMessage');
+    let recoveryMode=location.hash.includes('type=recovery')||location.search.includes('type=recovery');
+    function showRecovery(){recoveryMode=true;form.classList.add('hidden');resetForm.classList.remove('hidden')}
+    db.auth.onAuthStateChange(event=>{if(event==='PASSWORD_RECOVERY')showRecovery()});
+    db.auth.getSession().then(({data:{session}})=>{if(recoveryMode)showRecovery();else if(session)location.replace('./painel.html')});
     form.addEventListener('submit',async e=>{e.preventDefault();message.textContent='';button.disabled=true;button.textContent='Entrando…';const {error}=await db.auth.signInWithPassword({email:email.value.trim(),password:password.value});if(error){message.textContent='E-mail ou senha inválidos.';button.disabled=false;button.textContent='Entrar no painel';return}location.replace('./painel.html')});
+    document.getElementById('forgotButton').addEventListener('click',async()=>{const address=email.value.trim();if(!address){message.textContent='Informe o e-mail acima.';email.focus();return}message.textContent='Enviando link…';const {error}=await db.auth.resetPasswordForEmail(address,{redirectTo:location.origin+location.pathname});message.classList.toggle('success',!error);message.textContent=error?'Não foi possível enviar agora. Tente novamente.':'Link enviado. Verifique a caixa de entrada e o spam.'});
+    resetForm.addEventListener('submit',async e=>{e.preventDefault();const next=newPassword.value;if(next!==confirmPassword.value){resetMessage.textContent='As senhas não são iguais.';return}const resetButton=document.getElementById('resetButton');resetButton.disabled=true;resetButton.textContent='Salvando…';const {error}=await db.auth.updateUser({password:next});if(error){resetMessage.textContent='Não foi possível salvar a senha. Solicite um novo link.';resetButton.disabled=false;resetButton.textContent='Salvar nova senha';return}resetMessage.classList.add('success');resetMessage.textContent='Senha criada. Abrindo o painel…';setTimeout(()=>location.replace('./gestor.html'),800)});
   </script>
 </body>
 </html>
