@@ -203,6 +203,7 @@ input[type=range]{width:100%;accent-color:var(--pink)}
 select{
   width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink)
 }
+.money-input{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink)}
 .result-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 .result{
   padding:15px;border-radius:17px;border:1px solid var(--line);background:#fff
@@ -387,6 +388,16 @@ select{
             <option value="30">30 dias — mês completo</option>
             <option value="31">31 dias — mês completo</option>
           </select>
+        </div>
+
+        <div class="control">
+          <div class="top"><label>Gasto diário ideal do gestor</label><b>Base operacional</b></div>
+          <input class="money-input" id="idealDailySpend" type="number" min="0" step="50" value="2500">
+        </div>
+
+        <div class="control">
+          <div class="top"><label>Teto diário do gestor</label><b>Não ultrapassar</b></div>
+          <input class="money-input" id="maxDailySpend" type="number" min="0" step="50" value="2700">
         </div>
 
         <div class="control">
@@ -749,7 +760,7 @@ function updateCalculator(){
 }
 
 function initCalculator(){
-  ['budget','days','hours','retention','conversion','margin'].forEach(id=>{
+  ['budget','days','hours','retention','conversion','margin','idealDailySpend','maxDailySpend'].forEach(id=>{
     const node=el(id);
     if(!node) return;
     node.addEventListener('input',updateCalculator);
@@ -767,7 +778,9 @@ function queueSettingsSave(){
 async function saveSettings(){
   if(!currentUser||!currentWorkspaceId||currentRole!=='admin')return;
   showSync();
-  const payload={budget:+el('budget').value,days:+el('days').value,hours:+el('hours').value,retention:+el('retention').value,conversion:+el('conversion').value,margin:+el('margin').value,updated_at:new Date().toISOString()};
+  const idealDailySpend=+el('idealDailySpend').value,maxDailySpend=+el('maxDailySpend').value;
+  if(maxDailySpend<idealDailySpend){showSync('Teto menor que o ideal');return;}
+  const payload={budget:+el('budget').value,days:+el('days').value,hours:+el('hours').value,retention:+el('retention').value,conversion:+el('conversion').value,margin:+el('margin').value,ideal_daily_spend:idealDailySpend,max_daily_spend:maxDailySpend,updated_at:new Date().toISOString()};
   const {error}=await db.from('moises_workspace_config').update(payload).eq('workspace_id',currentWorkspaceId);
   showSync(error?'Falha ao sincronizar':'Dados sincronizados');
 }
@@ -783,6 +796,7 @@ async function loadCloudData(){
   Object.assign(base,{period_label:settings.period_label,operating_days:+settings.operating_days,spend:+settings.base_spend,revenue:+settings.base_revenue,orders:+settings.base_orders,leads:+settings.base_leads,previous_spend:+settings.previous_spend,previous_revenue:+settings.previous_revenue});base.ticket=base.orders?base.revenue/base.orders:0;
   el('budget').max=Math.ceil(base.spend);el('budget').min=Math.max(0,Math.floor(base.spend*.5));
   ['budget','days','hours','retention','conversion','margin'].forEach(k=>{if(settings[k]!=null&&el(k))el(k).value=settings[k]});
+  el('idealDailySpend').value=settings.ideal_daily_spend??2500;el('maxDailySpend').value=settings.max_daily_spend??2700;
   dailyRecords=(records||[]).map(r=>({date:r.record_date,sales:Number(r.sales),media:Number(r.media_spend),leads:+r.leads,clicks:+r.clicks,impressions:+r.impressions,orders:+r.orders,note:r.action_note||''}));
   renderBaseline();
   return true;
