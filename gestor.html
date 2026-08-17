@@ -33,13 +33,13 @@
       </section>
       <section class="card">
         <div class="eyebrow">Direção de hoje</div><h2>Quanto investir hoje</h2>
-        <p class="section-help">A recomendação considera as vendas lançadas pelo administrador, o gasto acumulado e o orçamento restante.</p>
+        <p class="section-help">A recomendação considera o resultado comercial sem mostrar valores de venda. Você recebe somente a direção necessária para operar.</p>
         <div class="command" id="command"><h3 id="commandTitle">Calculando orientação…</h3><p id="commandText">Aguarde o carregamento dos dados compartilhados.</p></div>
         <div class="metrics">
           <div class="metric"><small>Gasto sugerido hoje</small><strong id="mediaCeiling">—</strong><span id="mediaDays">calculando limite</span></div>
-          <div class="metric"><small>Venda necessária hoje</small><strong id="minimumSale">—</strong><span>informada pelo painel administrativo</span></div>
-          <div class="metric"><small>Meta de leads</small><strong id="leadsNeeded">—</strong><span>quantidade de leads para buscar hoje</span></div>
-          <div class="metric"><small>Limite de CPL</small><strong id="maxCpl">—</strong><span>custo máximo estimado por lead</span></div>
+          <div class="metric"><small>Valor ideal</small><strong id="idealSpend">—</strong><span>referência principal do dia</span></div>
+          <div class="metric"><small>Teto máximo</small><strong id="maxSpend">—</strong><span>não é uma meta de gasto</span></div>
+          <div class="metric"><small>Status da operação</small><strong id="operationStatus">—</strong><span>atualizado pelo desempenho</span></div>
         </div>
       </section>
       <section class="card">
@@ -57,16 +57,16 @@
       </section>
       <section class="card full">
         <div class="eyebrow">Resultado dos anúncios</div><h2>Como está o desempenho</h2>
-        <p class="section-help">Os valores abaixo juntam os registros de tráfego com vendas e pedidos lançados pelo administrador.</p>
+        <p class="section-help">Aqui aparecem somente informações da plataforma de anúncios. Os dados comerciais permanecem restritos ao administrador.</p>
         <div class="health">
-          <div class="metric"><small>Retorno — ROAS</small><strong id="roas">—</strong><span>quanto vendeu para cada R$ 1 investido</span></div>
+          <div class="metric"><small>Mídia acumulada</small><strong id="mediaTotal">—</strong><span>total registrado na Meta Ads</span></div>
+          <div class="metric"><small>Leads acumulados</small><strong id="leadsTotal">—</strong><span>contatos recebidos no período</span></div>
           <div class="metric"><small>Taxa de clique — CTR</small><strong id="ctr">—</strong><span>interesse gerado pelos anúncios</span></div>
           <div class="metric"><small>Custo por clique — CPC</small><strong id="cpc">—</strong><span>quanto custa levar uma pessoa ao anúncio</span></div>
           <div class="metric"><small>Custo por lead — CPL</small><strong id="cpl">—</strong><span>quanto custa cada contato recebido</span></div>
-          <div class="metric"><small>Custo por pedido — CPA</small><strong id="cpa">—</strong><span>quanto de mídia foi usado por pedido</span></div>
-          <div class="metric"><small>Conversão comercial</small><strong id="conversion">—</strong><span>quantos leads viraram pedidos</span></div>
+          <div class="metric"><small>Cliques acumulados</small><strong id="clicksTotal">—</strong><span>total de cliques nos anúncios</span></div>
         </div>
-        <div class="table-wrap"><table><thead><tr><th>Data</th><th>Mídia</th><th>Vendas</th><th>ROAS</th><th>Leads</th><th>CPL</th><th>Ação realizada</th></tr></thead><tbody id="history"></tbody></table></div>
+        <div class="table-wrap"><table><thead><tr><th>Data</th><th>Mídia</th><th>Leads</th><th>Cliques</th><th>CTR</th><th>CPL</th><th>Ação realizada</th></tr></thead><tbody id="history"></tbody></table></div>
       </section>
     </div>
   </main>
@@ -74,27 +74,21 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.56.0/dist/umd/supabase.min.js"></script>
   <script>
     const db=window.supabase.createClient('https://nubzdbalhhqgrwjyjord.supabase.co','sb_publishable_TG0W0Ih25aHB2A7u0Tkdig_l6R168sd');
-    let user=null,workspaceId=null,settings=null,records=[];
+    let user=null,workspaceId=null,guidance=null,records=[],realtimeChannel=null,realtimeTimer=null;
     const $=id=>document.getElementById(id),num=v=>Number(v)||0;
     const brl=v=>num(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
     const precise=v=>num(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
     const today=()=>{const d=new Date(),off=d.getTimezoneOffset();return new Date(d.getTime()-off*60000).toISOString().slice(0,10)};
     function loginUrl(){return location.pathname.replace(/gestor\.html$/,'index.html')||'./index.html'}
     function showSync(text){$('sync').textContent=text;$('sync').classList.add('show');clearTimeout(showSync.t);showSync.t=setTimeout(()=>$('sync').classList.remove('show'),1500)}
-    function totals(){return records.reduce((a,r)=>{a.sales+=num(r.sales);a.media+=num(r.media_spend);a.leads+=num(r.leads);a.orders+=num(r.orders);a.clicks+=num(r.clicks);a.impressions+=num(r.impressions);return a},{sales:0,media:0,leads:0,orders:0,clicks:0,impressions:0})}
+    function totals(){return records.reduce((a,r)=>{a.media+=num(r.media_spend);a.leads+=num(r.leads);a.clicks+=num(r.clicks);a.impressions+=num(r.impressions);return a},{media:0,leads:0,clicks:0,impressions:0})}
     function render(){
-      const t=totals(),days=num(settings.days),salesDays=records.filter(r=>num(r.sales)>0).length,mediaDays=records.filter(r=>num(r.media_spend)>0).length,remainingSales=Math.max(days-salesDays,0),remainingMedia=Math.max(days-mediaDays,0),budget=num(settings.budget),remainingBudget=Math.max(budget-t.media,0),budgetCeiling=remainingMedia?remainingBudget/remainingMedia:0;
-      const saving=num(settings.base_spend)-budget,margin=num(settings.margin)/100,minMonthly=num(settings.base_revenue)-(margin?saving/margin:0),minSale=remainingSales?Math.max(minMonthly-t.sales,0)/remainingSales:0,ticket=num(settings.base_orders)?num(settings.base_revenue)/num(settings.base_orders):0,conversion=num(settings.conversion)/100,ordersNeeded=ticket?Math.ceil(minSale/ticket):0,leadsNeeded=conversion?Math.ceil(ordersNeeded/conversion):0;
-      const ideal=num(settings.ideal_daily_spend)||2500,absoluteMax=Math.max(num(settings.max_daily_spend)||2700,ideal),salesProjection=salesDays?t.sales/salesDays*days:0,safeRange=Math.max(num(settings.base_revenue)-minMonthly,1),pressure=Math.min(Math.max((num(settings.base_revenue)-salesProjection)/safeRange,0),1),performanceSuggestion=salesDays?ideal+(absoluteMax-ideal)*pressure:ideal,suggested=remainingMedia?Math.min(performanceSuggestion,absoluteMax,Math.max(budgetCeiling,0)):0,maxCpl=leadsNeeded?suggested/leadsNeeded:0;
-      $('mediaCeiling').textContent=brl(suggested);$('mediaDays').textContent=`ideal ${brl(ideal)} • teto ${brl(absoluteMax)}`;$('minimumSale').textContent=minSale?brl(minSale):'Mínimo alcançado';$('leadsNeeded').textContent=leadsNeeded?leadsNeeded.toLocaleString('pt-BR'):'—';$('maxCpl').textContent=maxCpl?brl(maxCpl):'—';
-      const projection=mediaDays?t.media/mediaDays*days:0,cmd=$('command');cmd.className='command';
-      if(!records.length){$('commandTitle').textContent='Comece com o valor planejado';$('commandText').textContent=`Use ${brl(ideal)} como referência hoje. No fim do dia, registre os números da Meta Ads para atualizar a próxima orientação.`}
-      else if(t.media>=budget){cmd.classList.add('danger');$('commandTitle').textContent='Não aumente o investimento';$('commandText').textContent=`O orçamento de ${brl(budget)} já foi alcançado. Preserve somente as campanhas essenciais e comunique o responsável.`}
-      else if(projection>budget){cmd.classList.add('warn');$('commandTitle').textContent='Reduza o ritmo de gasto';$('commandText').textContent=`A projeção de mídia está acima do orçamento. Trabalhe com ${brl(suggested)} hoje e não ultrapasse o teto de ${brl(absoluteMax)}.`}
-      else if(salesDays&&salesProjection>=num(settings.base_revenue)){$('commandTitle').textContent='Vendas fortes: enxugue a mídia';$('commandText').textContent=`O faturamento está acima do ritmo da base. Use ${brl(ideal)} como referência hoje; o teto de ${brl(absoluteMax)} não é uma meta de gasto.`}
-      else{$('commandTitle').textContent='Mantenha o ritmo com controle';$('commandText').textContent=`A recomendação de hoje é ${brl(suggested)}, calculada dentro da faixa de ${brl(ideal)} a ${brl(absoluteMax)} conforme o ritmo das vendas.`}
-      $('roas').textContent=t.media?precise(t.sales/t.media)+'x':'—';$('ctr').textContent=t.impressions?precise(t.clicks/t.impressions*100)+'%':'—';$('cpc').textContent=t.clicks?brl(t.media/t.clicks):'—';$('cpl').textContent=t.leads?brl(t.media/t.leads):'—';$('cpa').textContent=t.orders?brl(t.media/t.orders):'—';$('conversion').textContent=t.leads?precise(t.orders/t.leads*100)+'%':'—';
-      $('history').innerHTML=records.length?[...records].reverse().map(r=>`<tr><td>${r.record_date.split('-').reverse().join('/')}</td><td>${brl(r.media_spend)}</td><td>${brl(r.sales)}</td><td>${num(r.media_spend)?precise(num(r.sales)/num(r.media_spend))+'x':'—'}</td><td>${num(r.leads).toLocaleString('pt-BR')}</td><td>${num(r.leads)?brl(num(r.media_spend)/num(r.leads)):'—'}</td><td class="note">${escapeHtml(r.action_note||'—')}</td></tr>`).join(''):'<tr><td colspan="7" class="empty">Nenhum desempenho registrado.</td></tr>';
+      const t=totals(),ideal=num(guidance.ideal_daily_spend),absoluteMax=num(guidance.max_daily_spend),suggested=num(guidance.suggested_spend),cmd=$('command');
+      $('mediaCeiling').textContent=brl(suggested);$('mediaDays').textContent='orientação atualizada automaticamente';$('idealSpend').textContent=brl(ideal);$('maxSpend').textContent=brl(absoluteMax);
+      const statusLabels={start:'Começando',strong:'Vendas fortes',steady:'Ritmo saudável',reduce:'Reduzir gasto',stop:'Atenção'};$('operationStatus').textContent=statusLabels[guidance.status_code]||'Acompanhando';
+      cmd.className='command';if(guidance.status_code==='reduce')cmd.classList.add('warn');if(guidance.status_code==='stop')cmd.classList.add('danger');$('commandTitle').textContent=guidance.guidance_title;$('commandText').textContent=guidance.guidance_text;
+      $('mediaTotal').textContent=brl(t.media);$('leadsTotal').textContent=t.leads.toLocaleString('pt-BR');$('ctr').textContent=t.impressions?precise(t.clicks/t.impressions*100)+'%':'—';$('cpc').textContent=t.clicks?brl(t.media/t.clicks):'—';$('cpl').textContent=t.leads?brl(t.media/t.leads):'—';$('clicksTotal').textContent=t.clicks.toLocaleString('pt-BR');
+      $('history').innerHTML=records.length?[...records].reverse().map(r=>`<tr><td>${r.record_date.split('-').reverse().join('/')}</td><td>${brl(r.media_spend)}</td><td>${num(r.leads).toLocaleString('pt-BR')}</td><td>${num(r.clicks).toLocaleString('pt-BR')}</td><td>${num(r.impressions)?precise(num(r.clicks)/num(r.impressions)*100)+'%':'—'}</td><td>${num(r.leads)?brl(num(r.media_spend)/num(r.leads)):'—'}</td><td class="note">${escapeHtml(r.action_note||'—')}</td></tr>`).join(''):'<tr><td colspan="7" class="empty">Nenhum desempenho registrado.</td></tr>';
     }
     function escapeHtml(value){const d=document.createElement('div');d.textContent=value;return d.innerHTML}
     function fillDate(date){const r=records.find(x=>x.record_date===date);['media','leads','clicks','impressions'].forEach(k=>$(k).value=r?num(r[k==='media'?'media_spend':k]):'');$('note').value=r?.action_note||''}
@@ -102,11 +96,12 @@
       const {data:{session}}=await db.auth.getSession();if(!session){location.replace(loginUrl());return}user=session.user;
       const {data:member,error:memberError}=await db.from('moises_workspace_members').select('workspace_id,role').eq('user_id',user.id).single();if(memberError||!member){alert('Seu acesso ainda não está vinculado à operação.');return}
       workspaceId=member.workspace_id;$('account').textContent=`${user.email} • ${member.role==='admin'?'Administrador':'Gestor de tráfego'}`;
-      const [{data:config,error:configError},{data:daily,error:dailyError}]=await Promise.all([db.from('moises_workspace_config').select('*').eq('workspace_id',workspaceId).single(),db.from('moises_daily_metrics').select('*').eq('workspace_id',workspaceId).order('record_date')]);
-      if(configError||dailyError){alert('Não foi possível carregar os dados.');return}settings=config;records=daily||[];$('date').value=today();fillDate($('date').value);render();document.body.classList.remove('auth-pending');
+      if(!await reloadData()){alert('Não foi possível carregar os dados.');return}$('date').value=today();fillDate($('date').value);render();subscribeRealtime();document.body.classList.remove('auth-pending');
     }
+    async function reloadData(){const [{data:guide,error:guideError},{data:daily,error:dailyError}]=await Promise.all([db.from('moises_traffic_guidance').select('*').eq('workspace_id',workspaceId).single(),db.from('moises_daily_metrics').select('workspace_id,record_date,media_spend,leads,clicks,impressions,action_note,updated_at').eq('workspace_id',workspaceId).order('record_date')]);if(guideError||dailyError)return false;guidance=guide;records=daily||[];return true}
+    function subscribeRealtime(){if(realtimeChannel)db.removeChannel(realtimeChannel);const refresh=()=>{clearTimeout(realtimeTimer);realtimeTimer=setTimeout(async()=>{if(await reloadData()){fillDate($('date').value);render();showSync('Atualizado em tempo real')}},250)};realtimeChannel=db.channel(`moises-traffic-${workspaceId}`).on('postgres_changes',{event:'*',schema:'public',table:'moises_daily_metrics',filter:`workspace_id=eq.${workspaceId}`},refresh).on('postgres_changes',{event:'*',schema:'public',table:'moises_traffic_guidance',filter:`workspace_id=eq.${workspaceId}`},refresh).subscribe(status=>{if(status==='SUBSCRIBED')showSync('Sincronização em tempo real ativa')})}
     $('date').addEventListener('change',e=>fillDate(e.target.value));
-    $('dailyForm').addEventListener('submit',async e=>{e.preventDefault();const button=$('save'),date=$('date').value,current=records.find(r=>r.record_date===date)||{};button.disabled=true;$('message').textContent='';showSync('Salvando…');const payload={workspace_id:workspaceId,record_date:date,media_spend:num($('media').value),leads:num($('leads').value),clicks:num($('clicks').value),impressions:num($('impressions').value),action_note:$('note').value.trim()||null,updated_by:user.id,updated_at:new Date().toISOString()};const {data,error}=await db.from('moises_daily_metrics').upsert(payload,{onConflict:'workspace_id,record_date'}).select().single();button.disabled=false;if(error){$('message').textContent='Não foi possível salvar. Tente novamente.';showSync('Falha ao salvar');return}records=records.filter(r=>r.record_date!==date).concat(data).sort((a,b)=>a.record_date.localeCompare(b.record_date));$('message').textContent='Desempenho de mídia salvo. Vendas e pedidos permanecem sob responsabilidade do administrador.';showSync('Dados sincronizados');render()});
+    $('dailyForm').addEventListener('submit',async e=>{e.preventDefault();const button=$('save'),date=$('date').value;button.disabled=true;$('message').textContent='';showSync('Salvando…');const payload={workspace_id:workspaceId,record_date:date,media_spend:num($('media').value),leads:num($('leads').value),clicks:num($('clicks').value),impressions:num($('impressions').value),action_note:$('note').value.trim()||'',updated_by:user.id,updated_at:new Date().toISOString()};const {data,error}=await db.from('moises_daily_metrics').upsert(payload,{onConflict:'workspace_id,record_date'}).select().single();button.disabled=false;if(error){$('message').textContent='Não foi possível salvar. Tente novamente.';showSync('Falha ao salvar');return}records=records.filter(r=>r.record_date!==date).concat(data).sort((a,b)=>a.record_date.localeCompare(b.record_date));$('message').textContent='Desempenho de mídia salvo. A orientação será atualizada automaticamente.';showSync('Dados sincronizados');render()});
     $('logout').addEventListener('click',async()=>{await db.auth.signOut();location.replace(loginUrl())});db.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||!session)location.replace(loginUrl())});load();
   </script>
 </body>
