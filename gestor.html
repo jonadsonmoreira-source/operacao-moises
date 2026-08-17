@@ -8,52 +8,63 @@
     :root{--ink:#321443;--muted:#775f80;--purple:#682383;--pink:#e32d87;--green:#087a51;--line:#eadce9;--soft:#fff8fc;--warn:#a45a00;--danger:#aa315d}
     *{box-sizing:border-box}body{margin:0;background:linear-gradient(145deg,#fff 0,#fff7fb 50%,#f5f1ff 100%);color:var(--ink);font:15px/1.5 Inter,system-ui,-apple-system,sans-serif;min-height:100vh}
     button,input,textarea{font:inherit}.shell{width:min(1120px,calc(100% - 28px));margin:auto;padding:24px 0 54px}.top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:24px}.brand small{display:block;color:var(--pink);font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}.brand h1{margin:2px 0;font-size:clamp(25px,4vw,42px);line-height:1.06}.brand p{margin:5px 0 0;color:var(--muted)}.actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.actions a,.actions button{border:0;border-radius:999px;padding:10px 14px;text-decoration:none;font-weight:800;cursor:pointer}.actions a{background:#fff;color:var(--purple);box-shadow:0 6px 22px #47235418}.actions button{background:var(--purple);color:#fff}
-    .grid{display:grid;grid-template-columns:1.08fr .92fr;gap:18px}.card{background:#fffc;border:1px solid var(--line);border-radius:24px;padding:22px;box-shadow:0 16px 50px #4c265112}.card.full{grid-column:1/-1}.eyebrow{font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--pink)}h2{font-size:24px;margin:5px 0 16px}.command{padding:18px;border-radius:18px;background:#f1fff8;border:1px solid #ccebdc;margin-bottom:16px}.command h3{margin:0 0 5px;color:var(--green);font-size:20px}.command p{margin:0;color:#456456}.command.warn{background:#fff8ec;border-color:#f1ddba}.command.warn h3{color:var(--warn)}.command.danger{background:#fff2f6;border-color:#f0cfdb}.command.danger h3{color:var(--danger)}
+    .grid{display:grid;grid-template-columns:1.08fr .92fr;gap:18px}.card{background:#fffc;border:1px solid var(--line);border-radius:24px;padding:22px;box-shadow:0 16px 50px #4c265112}.card.full{grid-column:1/-1}.eyebrow{font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--pink)}h2{font-size:24px;margin:5px 0 8px}.section-help{margin:0 0 16px;color:var(--muted);font-size:13px}.account-line{font-size:12px!important}.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.step{display:flex;gap:11px;align-items:flex-start;padding:13px;border-radius:16px;background:#fff;border:1px solid var(--line)}.step b{display:grid;place-items:center;flex:0 0 28px;height:28px;border-radius:50%;background:var(--purple);color:#fff}.step strong{display:block;font-size:13px}.step span{display:block;color:var(--muted);font-size:11px;margin-top:2px}.command{padding:18px;border-radius:18px;background:#f1fff8;border:1px solid #ccebdc;margin-bottom:16px}.command h3{margin:0 0 5px;color:var(--green);font-size:20px}.command p{margin:0;color:#456456}.command.warn{background:#fff8ec;border-color:#f1ddba}.command.warn h3{color:var(--warn)}.command.danger{background:#fff2f6;border-color:#f0cfdb}.command.danger h3{color:var(--danger)}
     .metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.metric{border:1px solid var(--line);border-radius:17px;padding:14px;background:#fff}.metric small{display:block;color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase}.metric strong{display:block;font-size:22px;margin:3px 0}.metric span{font-size:12px;color:var(--muted)}
     form{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.field{display:grid;gap:5px}.field.wide{grid-column:1/-1}.field label{font-size:12px;font-weight:800;color:var(--muted)}input,textarea{width:100%;border:1px solid var(--line);border-radius:13px;padding:11px 12px;background:#fff;color:var(--ink);outline:none}input:focus,textarea:focus{border-color:#bd81cc;box-shadow:0 0 0 3px #a04eb315}textarea{resize:vertical;min-height:78px}.save{grid-column:1/-1;border:0;border-radius:14px;padding:13px;background:linear-gradient(90deg,var(--pink),var(--purple));color:#fff;font-weight:900;cursor:pointer}.save:disabled{opacity:.6}.message{grid-column:1/-1;margin:0;min-height:22px;color:var(--green);font-weight:700}
-    .health{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}.health .metric strong{font-size:18px}.table-wrap{overflow:auto;margin-top:16px}table{width:100%;border-collapse:collapse;min-width:780px}th,td{text-align:left;padding:11px 9px;border-bottom:1px solid var(--line);white-space:nowrap}th{font-size:10px;color:var(--muted);text-transform:uppercase}td{font-size:13px}.note{white-space:normal;min-width:180px}.empty{text-align:center;color:var(--muted);padding:22px}.sync{position:fixed;right:16px;bottom:16px;background:var(--ink);color:#fff;padding:10px 14px;border-radius:999px;font-size:12px;font-weight:800;opacity:0;transform:translateY(12px);transition:.2s;pointer-events:none}.sync.show{opacity:1;transform:none}.auth-pending .shell{visibility:hidden}
-    @media(max-width:820px){.top{align-items:flex-start;flex-direction:column}.actions{justify-content:flex-start}.grid{grid-template-columns:1fr}.card.full{grid-column:auto}.health{grid-template-columns:repeat(3,1fr)}}
+    .health{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.health .metric strong{font-size:18px}.table-wrap{overflow:auto;margin-top:16px}table{width:100%;border-collapse:collapse;min-width:780px}th,td{text-align:left;padding:11px 9px;border-bottom:1px solid var(--line);white-space:nowrap}th{font-size:10px;color:var(--muted);text-transform:uppercase}td{font-size:13px}.note{white-space:normal;min-width:180px}.empty{text-align:center;color:var(--muted);padding:22px}.sync{position:fixed;right:16px;bottom:16px;background:var(--ink);color:#fff;padding:10px 14px;border-radius:999px;font-size:12px;font-weight:800;opacity:0;transform:translateY(12px);transition:.2s;pointer-events:none}.sync.show{opacity:1;transform:none}.auth-pending .shell{visibility:hidden}
+    @media(max-width:820px){.top{align-items:flex-start;flex-direction:column}.actions{justify-content:flex-start}.grid{grid-template-columns:1fr}.card.full{grid-column:auto}.steps{grid-template-columns:1fr}.health{grid-template-columns:repeat(3,1fr)}}
     @media(max-width:520px){.shell{width:min(100% - 18px,1120px);padding-top:14px}.card{padding:17px;border-radius:20px}.metrics,.health,form{grid-template-columns:1fr 1fr}.health .metric:last-child:nth-child(odd){grid-column:1/-1}.field.wide,.save,.message{grid-column:1/-1}.actions{width:100%}.actions a,.actions button{flex:1;text-align:center}.brand p{font-size:13px}}
   </style>
 </head>
 <body class="auth-pending">
   <main class="shell">
     <header class="top">
-      <div class="brand"><small>Operação Moisés</small><h1>Painel do Gestor de Tráfego</h1><p id="account">Carregando acesso…</p></div>
+      <div class="brand"><small>Operação Moisés</small><h1>Painel do Gestor de Tráfego</h1><p>Veja a orientação do dia e registre os números da plataforma de anúncios.</p><p class="account-line" id="account">Carregando acesso…</p></div>
       <div class="actions"><a href="./painel.html">Visão estratégica</a><button id="logout" type="button">Sair</button></div>
     </header>
     <div class="grid">
-      <section class="card">
-        <div class="eyebrow">Direção de hoje</div><h2>O que fazer agora</h2>
-        <div class="command" id="command"><h3 id="commandTitle">Calculando orientação…</h3><p id="commandText">Aguarde o carregamento dos dados compartilhados.</p></div>
-        <div class="metrics">
-          <div class="metric"><small>Gasto sugerido hoje</small><strong id="mediaCeiling">—</strong><span id="mediaDays">calculando limite</span></div>
-          <div class="metric"><small>Venda mínima hoje</small><strong id="minimumSale">—</strong><span>para manter a economia</span></div>
-          <div class="metric"><small>Leads necessários</small><strong id="leadsNeeded">—</strong><span>referência diária</span></div>
-          <div class="metric"><small>CPL máximo</small><strong id="maxCpl">—</strong><span>para respeitar o teto</span></div>
+      <section class="card full">
+        <div class="eyebrow">Uso rápido</div><h2>Como usar este painel</h2>
+        <div class="steps">
+          <div class="step"><b>1</b><div><strong>Antes de começar</strong><span>Confira o gasto recomendado e o teto máximo do dia.</span></div></div>
+          <div class="step"><b>2</b><div><strong>No fim do dia</strong><span>Copie da plataforma: gasto, leads, cliques e impressões.</span></div></div>
+          <div class="step"><b>3</b><div><strong>Registre a decisão</strong><span>Conte brevemente o que aumentou, reduziu, pausou ou testou.</span></div></div>
         </div>
       </section>
       <section class="card">
-        <div class="eyebrow">Registro operacional</div><h2>Desempenho do dia</h2>
+        <div class="eyebrow">Direção de hoje</div><h2>Quanto investir hoje</h2>
+        <p class="section-help">A recomendação considera as vendas lançadas pelo administrador, o gasto acumulado e o orçamento restante.</p>
+        <div class="command" id="command"><h3 id="commandTitle">Calculando orientação…</h3><p id="commandText">Aguarde o carregamento dos dados compartilhados.</p></div>
+        <div class="metrics">
+          <div class="metric"><small>Gasto sugerido hoje</small><strong id="mediaCeiling">—</strong><span id="mediaDays">calculando limite</span></div>
+          <div class="metric"><small>Venda necessária hoje</small><strong id="minimumSale">—</strong><span>informada pelo painel administrativo</span></div>
+          <div class="metric"><small>Meta de leads</small><strong id="leadsNeeded">—</strong><span>quantidade de leads para buscar hoje</span></div>
+          <div class="metric"><small>Limite de CPL</small><strong id="maxCpl">—</strong><span>custo máximo estimado por lead</span></div>
+        </div>
+      </section>
+      <section class="card">
+        <div class="eyebrow">Registro operacional</div><h2>Preencha no fim do dia</h2>
+        <p class="section-help">Use somente os números exibidos na Meta Ads. Vendas e pedidos são preenchidos pelo administrador.</p>
         <form id="dailyForm">
           <div class="field wide"><label for="date">Data</label><input id="date" type="date" required></div>
-          <div class="field wide"><label for="media">Gasto em mídia (R$)</label><input id="media" type="number" min="0" step="0.01" required></div>
-          <div class="field"><label for="leads">Leads</label><input id="leads" type="number" min="0" step="1"></div>
-          <div class="field"><label for="clicks">Cliques</label><input id="clicks" type="number" min="0" step="1"></div>
-          <div class="field"><label for="impressions">Impressões</label><input id="impressions" type="number" min="0" step="1"></div>
+          <div class="field wide"><label for="media">Valor gasto na Meta Ads (R$)</label><input id="media" type="number" min="0" step="0.01" placeholder="Ex.: 2530,00" required></div>
+          <div class="field"><label for="leads">Leads recebidos</label><input id="leads" type="number" min="0" step="1" placeholder="Ex.: 320"></div>
+          <div class="field"><label for="clicks">Cliques nos anúncios</label><input id="clicks" type="number" min="0" step="1" placeholder="Ex.: 1800"></div>
+          <div class="field"><label for="impressions">Impressões dos anúncios</label><input id="impressions" type="number" min="0" step="1" placeholder="Ex.: 95000"></div>
           <div class="field wide"><label for="note">O que foi ajustado hoje?</label><textarea id="note" placeholder="Ex.: reduzi o orçamento da campanha X e mantive o criativo Y."></textarea></div>
           <button class="save" id="save" type="submit">Salvar desempenho</button><p class="message" id="message"></p>
         </form>
       </section>
       <section class="card full">
-        <div class="eyebrow">Saúde atual</div><h2>Eficiência acumulada</h2>
+        <div class="eyebrow">Resultado dos anúncios</div><h2>Como está o desempenho</h2>
+        <p class="section-help">Os valores abaixo juntam os registros de tráfego com vendas e pedidos lançados pelo administrador.</p>
         <div class="health">
-          <div class="metric"><small>ROAS</small><strong id="roas">—</strong><span>venda ÷ mídia</span></div>
-          <div class="metric"><small>CTR</small><strong id="ctr">—</strong><span>cliques ÷ impressões</span></div>
-          <div class="metric"><small>CPC</small><strong id="cpc">—</strong><span>custo por clique</span></div>
-          <div class="metric"><small>CPL</small><strong id="cpl">—</strong><span>custo por lead</span></div>
-          <div class="metric"><small>CPA</small><strong id="cpa">—</strong><span>custo por pedido</span></div>
-          <div class="metric"><small>Conversão</small><strong id="conversion">—</strong><span>pedidos ÷ leads</span></div>
+          <div class="metric"><small>Retorno — ROAS</small><strong id="roas">—</strong><span>quanto vendeu para cada R$ 1 investido</span></div>
+          <div class="metric"><small>Taxa de clique — CTR</small><strong id="ctr">—</strong><span>interesse gerado pelos anúncios</span></div>
+          <div class="metric"><small>Custo por clique — CPC</small><strong id="cpc">—</strong><span>quanto custa levar uma pessoa ao anúncio</span></div>
+          <div class="metric"><small>Custo por lead — CPL</small><strong id="cpl">—</strong><span>quanto custa cada contato recebido</span></div>
+          <div class="metric"><small>Custo por pedido — CPA</small><strong id="cpa">—</strong><span>quanto de mídia foi usado por pedido</span></div>
+          <div class="metric"><small>Conversão comercial</small><strong id="conversion">—</strong><span>quantos leads viraram pedidos</span></div>
         </div>
         <div class="table-wrap"><table><thead><tr><th>Data</th><th>Mídia</th><th>Vendas</th><th>ROAS</th><th>Leads</th><th>CPL</th><th>Ação realizada</th></tr></thead><tbody id="history"></tbody></table></div>
       </section>
@@ -77,7 +88,7 @@
       const ideal=num(settings.ideal_daily_spend)||2500,absoluteMax=Math.max(num(settings.max_daily_spend)||2700,ideal),salesProjection=salesDays?t.sales/salesDays*days:0,safeRange=Math.max(num(settings.base_revenue)-minMonthly,1),pressure=Math.min(Math.max((num(settings.base_revenue)-salesProjection)/safeRange,0),1),performanceSuggestion=salesDays?ideal+(absoluteMax-ideal)*pressure:ideal,suggested=remainingMedia?Math.min(performanceSuggestion,absoluteMax,Math.max(budgetCeiling,0)):0,maxCpl=leadsNeeded?suggested/leadsNeeded:0;
       $('mediaCeiling').textContent=brl(suggested);$('mediaDays').textContent=`ideal ${brl(ideal)} • teto ${brl(absoluteMax)}`;$('minimumSale').textContent=minSale?brl(minSale):'Mínimo alcançado';$('leadsNeeded').textContent=leadsNeeded?leadsNeeded.toLocaleString('pt-BR'):'—';$('maxCpl').textContent=maxCpl?brl(maxCpl):'—';
       const projection=mediaDays?t.media/mediaDays*days:0,cmd=$('command');cmd.className='command';
-      if(!records.length){$('commandTitle').textContent='Registre o primeiro dia';$('commandText').textContent='Preencha mídia, vendas e os indicadores da plataforma para gerar a orientação diária.'}
+      if(!records.length){$('commandTitle').textContent='Comece com o valor planejado';$('commandText').textContent=`Use ${brl(ideal)} como referência hoje. No fim do dia, registre os números da Meta Ads para atualizar a próxima orientação.`}
       else if(t.media>=budget){cmd.classList.add('danger');$('commandTitle').textContent='Não aumente o investimento';$('commandText').textContent=`O orçamento de ${brl(budget)} já foi alcançado. Preserve somente as campanhas essenciais e comunique o responsável.`}
       else if(projection>budget){cmd.classList.add('warn');$('commandTitle').textContent='Reduza o ritmo de gasto';$('commandText').textContent=`A projeção de mídia está acima do orçamento. Trabalhe com ${brl(suggested)} hoje e não ultrapasse o teto de ${brl(absoluteMax)}.`}
       else if(salesDays&&salesProjection>=num(settings.base_revenue)){$('commandTitle').textContent='Vendas fortes: enxugue a mídia';$('commandText').textContent=`O faturamento está acima do ritmo da base. Use ${brl(ideal)} como referência hoje; o teto de ${brl(absoluteMax)} não é uma meta de gasto.`}
