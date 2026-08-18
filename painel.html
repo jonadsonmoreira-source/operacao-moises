@@ -289,6 +289,10 @@ select{
     <h3 id="accessTitle">Novo acesso</h3>
     <p>Informe o e-mail da pessoa. Ela receberá um convite para criar a própria senha e acessar a Operação Moisés.</p>
     <input id="inviteEmail" type="email" autocomplete="email" placeholder="email@empresa.com">
+    <select id="inviteRole" style="width:100%;margin-top:10px;padding:13px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);font:inherit">
+      <option value="viewer">Painel executivo — somente visualização</option>
+      <option value="traffic_manager">Gestor de tráfego — operação de mídia</option>
+    </select>
     <div class="access-actions"><button id="cancelInvite" type="button">Cancelar</button><button class="send" id="sendInvite" type="button">Enviar convite</button></div>
     <div class="access-message" id="accessMessage"></div>
   </div>
@@ -635,10 +639,11 @@ async function sendUserInvite(){
   const email=accessModal('inviteEmail').value.trim(),button=accessModal('sendInvite'),message=accessModal('accessMessage');
   if(!email){message.textContent='Informe o e-mail da pessoa.';return}
   button.disabled=true;button.textContent='Enviando…';message.textContent='';
-  const {data,error}=await db.functions.invoke('invite-moises-user',{body:{email}});
+  const role=accessModal('inviteRole').value;
+  const {data,error}=await db.functions.invoke('invite-moises-user',{body:{email,role}});
   button.disabled=false;button.textContent='Enviar convite';
   if(error||data?.error){message.textContent=data?.error||'Não foi possível enviar o convite.';return}
-  message.textContent='Convite enviado com sucesso.';accessModal('inviteEmail').value='';
+  message.textContent=role==='viewer'?'Convite executivo enviado. A pessoa poderá criar a própria senha.':'Convite do gestor enviado. A pessoa poderá criar a própria senha.';accessModal('inviteEmail').value='';
 }
 db.auth.onAuthStateChange((event,session)=>{
   if(event==='SIGNED_OUT'||!session) location.replace(loginUrl());
