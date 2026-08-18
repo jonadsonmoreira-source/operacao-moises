@@ -279,7 +279,52 @@ select{
   html{scroll-behavior:auto}
 }
 </style>
-</head>
+<style>
+@media(max-width:700px){
+  html{scroll-snap-type:none!important;scroll-padding-top:0}
+  body{padding-bottom:76px;overflow-x:hidden}
+  .account-bar{top:auto;bottom:8px;left:8px;right:8px;width:auto;justify-content:center;gap:5px;padding:7px 8px;border:1px solid var(--line);box-shadow:0 12px 34px rgba(45,20,55,.22)}
+  .account-bar #accountEmail{display:none}
+  .account-bar a,.account-bar button{flex:1;min-width:0;padding:9px 7px;text-align:center;font-size:9px;white-space:nowrap}
+  .chapter{min-height:auto!important;height:auto!important;scroll-snap-align:none!important;scroll-snap-stop:normal!important;align-items:flex-start;padding:46px 13px;overflow:visible}
+  .chapter.hero{min-height:calc(100svh - 70px)!important;align-items:center;padding-top:36px;padding-bottom:70px}
+  .inner{width:100%}
+  .chapter h1{font-size:clamp(52px,17vw,78px);line-height:.91}
+  .chapter h2{font-size:clamp(34px,11vw,50px);line-height:.94}
+  .kicker{margin-bottom:10px;font-size:9px}
+  .lead{font-size:16px;line-height:1.4;margin:13px 0}
+  .hero .quote{margin-top:20px;padding:13px 15px;font-size:14px}
+  .scroll-hint{bottom:22px}
+  .metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px;margin-top:18px}
+  .metric{min-width:0;min-height:108px;padding:13px;border-radius:17px}
+  .metric small{font-size:8px;line-height:1.3}
+  .metric strong{margin-top:7px;font-size:clamp(20px,7vw,28px);overflow-wrap:anywhere}
+  .metric span{font-size:10px}
+  .compare,.calc,.summary-grid{grid-template-columns:1fr!important;gap:10px;margin-top:18px}
+  .compare-card,.controls,.results,.summary-card,.summary-reading{padding:15px;border-radius:18px}
+  .result-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  .result{min-width:0;padding:11px;border-radius:13px}
+  .result strong{font-size:19px;overflow-wrap:anywhere}
+  .result span{font-size:9px}
+  .flow{grid-template-columns:1fr!important;gap:8px;margin-top:20px}
+  .flow-box{padding:16px 12px}
+  .arrow{font-size:24px;transform:rotate(90deg)}
+  .chapter-index{display:none}
+  .top{gap:8px}
+  input,select,button{min-height:44px}
+  input[type=range]{min-height:32px}
+  table{font-size:11px!important}
+  #c6 .inner>div[style*="overflow"],#c7 .inner>div[style*="overflow"]{max-height:250px!important;overflow:auto!important;-webkit-overflow-scrolling:touch}
+  .access-card{padding:20px;border-radius:20px}
+  .access-actions{flex-direction:column}
+  .sync-state{left:10px;bottom:70px}
+}
+@media(max-width:390px){
+  .account-bar a,.account-bar button{font-size:8px;padding-inline:5px}
+  .metric{padding:11px}.metric strong{font-size:19px}
+  .result-grid{grid-template-columns:1fr}
+}
+</style></head>
 <body class="auth-pending">
 
 <div class="account-bar"><span id="accountEmail"></span><a href="./apresentacao.html">Visão executiva</a><a href="./gestor.html">Painel do tráfego</a><button class="invite-button" id="inviteButton" type="button">Gerenciar acessos</button><button id="logoutButton" type="button">Sair</button></div>
