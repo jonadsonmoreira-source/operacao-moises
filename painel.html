@@ -633,7 +633,11 @@ accessModal('inviteButton').addEventListener('click',()=>{accessModal('accessMod
 accessModal('cancelInvite').addEventListener('click',()=>{accessModal('accessModal').classList.remove('open');accessModal('accessMessage').textContent=''});
 accessModal('sendInvite').addEventListener('click',sendUserInvite);
 async function checkAdminAccess(){
-  if(currentRole==='admin')accessModal('inviteButton').style.display='inline-block';
+  if(currentRole==='admin'){
+    accessModal('inviteButton').style.display='inline-block';
+    const params=new URLSearchParams(location.search),invite=params.get('invite'),role=params.get('role');
+    if(invite){accessModal('inviteEmail').value=invite;accessModal('inviteRole').value=role==='traffic_manager'?'traffic_manager':'viewer';accessModal('accessModal').classList.add('open')}
+  }
 }
 async function sendUserInvite(){
   const email=accessModal('inviteEmail').value.trim(),button=accessModal('sendInvite'),message=accessModal('accessMessage');
