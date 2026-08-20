@@ -359,12 +359,12 @@ select{
 
 <section id="c2" class="chapter light">
   <div class="inner reveal">
-    <div class="kicker">Capítulo 01 — Base atual</div>
-    <h2>Julho em uma tela</h2>
-    <p class="lead" id="baselineDescription">Carregando a base protegida…</p>
+    <div class="kicker">Capítulo 01 — Resultado analisado</div>
+    <h2 id="baselineTitle">Julho/2026 em uma tela</h2>
+    <p class="lead" id="baselineDescription">Carregando o resultado analisado…</p>
     <div class="metrics">
-      <div class="metric"><small>Faturamento</small><strong id="baseRevenue">—</strong><span>mês anterior</span></div>
-      <div class="metric"><small>Investimento</small><strong id="baseSpend">—</strong><span>Meta Ads / base provisória</span></div>
+      <div class="metric"><small>Faturamento</small><strong id="baseRevenue">—</strong><span>resultado do mês analisado</span></div>
+      <div class="metric"><small>Investimento</small><strong id="baseSpend">—</strong><span>Meta Ads no mês analisado</span></div>
       <div class="metric"><small>ROAS bruto</small><strong id="baseRoas">—</strong><span>faturamento ÷ mídia</span></div>
       <div class="metric"><small>Conversão</small><strong id="baseConversion">—</strong><span id="baseOrdersLeads">dados protegidos</span></div>
       <div class="metric"><small>Leads</small><strong id="baseLeads">—</strong><span id="baseLeadsDaily">média diária</span></div>
@@ -375,9 +375,9 @@ select{
 
 <section id="c3" class="chapter soft">
   <div class="inner reveal">
-    <div class="kicker">Capítulo 02 — O sinal</div>
+    <div class="kicker">Capítulo 02 — Comparação com o ano anterior</div>
     <h2>Mais mídia.<br>Menos eficiência.</h2>
-    <p class="lead">O faturamento cresceu, mas o investimento cresceu muito mais rápido.</p>
+    <p class="lead">Comparando com julho do ano anterior, o faturamento cresceu, mas o investimento em anúncios cresceu muito mais rápido.</p>
     <div class="compare">
       <div class="compare-card">
         <h3>Faturamento</h3>
@@ -390,11 +390,11 @@ select{
         <div class="delta up" id="spendComparison">carregando</div>
       </div>
       <div class="compare-card">
-        <h3>ROAS anterior</h3>
+        <h3>ROAS — ano anterior</h3>
         <div class="big" id="previousRoas">—</div>
       </div>
       <div class="compare-card">
-        <h3>ROAS atual</h3>
+        <h3>ROAS — mês analisado</h3>
         <div class="big" id="currentRoas">—</div>
         <div class="delta down" id="roasDelta">carregando</div>
       </div>
@@ -727,7 +727,8 @@ function renderBaseline(){
   const revenueGrowth=base.previous_revenue?(base.revenue/base.previous_revenue-1)*100:0;
   const spendGrowth=base.previous_spend?(base.spend/base.previous_spend-1)*100:0;
   const efficiencyDelta=previousRoas?(roas/previousRoas-1)*100:0;
-  el('baselineDescription').textContent=`A base é ${base.period_label}: ${base.operating_days} dias de operação, domingos fora da conta.`;
+  el('baselineTitle').textContent=`${base.period_label} em uma tela`;
+  el('baselineDescription').textContent=`Resultado analisado: ${base.operating_days} dias de operação, com os domingos fora da conta. Este é o faturamento que queremos preservar nos próximos testes.`;
   el('baseRevenue').textContent=compact(base.revenue);el('baseSpend').textContent=compact(base.spend);el('baseRoas').textContent=roas.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'x';
   el('baseConversion').textContent=pct(conversion);el('baseOrdersLeads').textContent=`${base.orders.toLocaleString('pt-BR')} pedidos / ${base.leads.toLocaleString('pt-BR')} leads`;
   el('baseLeads').textContent=base.leads.toLocaleString('pt-BR');el('baseLeadsDaily').textContent=`≈ ${Math.round(base.leads/base.operating_days).toLocaleString('pt-BR')} por dia`;
