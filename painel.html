@@ -665,6 +665,13 @@ async function requireAuth(){
   const {data:{session}}=await db.auth.getSession();
   if(!session){ location.replace(loginUrl()); return false; }
   currentUser=session.user;
+  const {data:membership,error}=await db.from('moises_workspace_members').select('workspace_id,role').eq('user_id',currentUser.id).single();
+  if(error||!membership){await db.auth.signOut();location.replace(loginUrl());return false}
+  currentWorkspaceId=membership.workspace_id;currentRole=membership.role;
+  if(currentRole!=='admin'){
+    location.replace(currentRole==='traffic_manager'?'./gestor.html':currentRole==='viewer'?'./apresentacao.html':loginUrl());
+    return false;
+  }
   document.getElementById('accountEmail').textContent=currentUser.email||'Conta conectada';
   document.body.classList.remove('auth-pending');
   return true;
