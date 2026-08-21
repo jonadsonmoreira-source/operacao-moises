@@ -278,6 +278,8 @@ select{
   .reveal{opacity:1;transform:none;transition:none}
   html{scroll-behavior:auto}
 }
+
+.monday-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px}.monday-actions{display:flex;gap:8px;align-items:center}.monday-actions button,.monday-save{border:0;border-radius:999px;padding:11px 15px;background:linear-gradient(90deg,var(--pink),var(--purple));color:#fff;font-weight:900;cursor:pointer}.monday-status{font-size:11px;color:var(--muted)}.monday-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-top:20px;max-height:54vh;overflow:auto;padding-right:4px}.monday-item{padding:16px;border-radius:18px;background:#fff;border:1px solid var(--line);box-shadow:0 10px 28px rgba(86,45,94,.06)}.monday-item h3{margin:3px 0 5px;font-size:18px}.monday-meta{font-size:10px;color:var(--muted)}.monday-publish{display:flex;align-items:center;gap:8px;margin:12px 0 8px;font-size:11px;font-weight:850}.monday-item input[type=text],.monday-item textarea{width:100%;margin-top:7px;padding:10px;border:1px solid var(--line);border-radius:11px;font:inherit}.monday-item textarea{min-height:70px;resize:vertical}.monday-save{margin-top:8px;padding:9px 13px;font-size:10px}.monday-empty{padding:22px;border:1px dashed var(--line);border-radius:18px;color:var(--muted);text-align:center}@media(max-width:700px){.monday-head{align-items:flex-start;flex-direction:column}.monday-list{grid-template-columns:1fr;max-height:none}.monday-actions{width:100%}.monday-actions button{flex:1}}
 </style>
 <style>
 @media(max-width:700px){
@@ -345,7 +347,7 @@ select{
 
 <nav class="chapter-index">
   <a href="#c1"></a><a href="#c2"></a><a href="#c3"></a><a href="#c4"></a>
-  <a href="#c5"></a><a href="#c6"></a><a href="#c7"></a><a href="#c8"></a><a href="#c9"></a><a href="#c10"></a>
+  <a href="#c5"></a><a href="#c6"></a><a href="#c7"></a><a href="#c8"></a><a href="#c9"></a><a href="#monday"></a><a href="#c10"></a>
 </nav>
 
 <section id="c1" class="chapter hero">
@@ -636,6 +638,24 @@ select{
   </div>
 </section>
 
+
+<section id="monday" class="chapter light">
+  <div class="inner reveal">
+    <div class="monday-head">
+      <div>
+        <div class="kicker">Central de insights</div>
+        <h2>Visão do<br>Jonadson</h2>
+        <p class="lead">As tarefas do Monday chegam privadas. Você escolhe o que vira uma atualização clara para os proprietários.</p>
+      </div>
+      <div class="monday-actions">
+        <span class="monday-status" id="mondayStatus">Aguardando sincronização</span>
+        <button id="syncMondayButton" type="button">Sincronizar Monday</button>
+      </div>
+    </div>
+    <div class="monday-list" id="mondayList"><div class="monday-empty">Carregando quadro Jonadson…</div></div>
+  </div>
+</section>
+
 <section id="c10" class="chapter soft">
   <div class="inner cta reveal">
     <div class="kicker">Capítulo 09 — Direção</div>
@@ -656,6 +676,8 @@ let dailyRecords=[];
 let settingsTimer=null;
 let realtimeChannel=null;
 let realtimeTimer=null;
+let mondayInsights=[];
+let mondayConnection=null;
 
 function loginUrl(){
   const base=location.pathname.replace(/painel\.html$/, 'index.html');
@@ -853,12 +875,15 @@ async function loadCloudData(){
   const {data:membership,error:membershipError}=await db.from('moises_workspace_members').select('workspace_id,role').eq('user_id',currentUser.id).single();
   if(membershipError||!membership){showSync('Acesso não vinculado');return false}
   currentWorkspaceId=membership.workspace_id;currentRole=membership.role;
-  const [{data:settings,error:settingsError},{data:traffic,error:trafficError},{data:commercial,error:commercialError}]=await Promise.all([
+  const [{data:settings,error:settingsError},{data:traffic,error:trafficError},{data:commercial,error:commercialError},{data:monday,error:mondayError},{data:connection}]=await Promise.all([
     db.from('moises_workspace_config').select('*').eq('workspace_id',currentWorkspaceId).single(),
     db.from('moises_daily_metrics').select('record_date,media_spend,leads,clicks,impressions,action_note').eq('workspace_id',currentWorkspaceId).order('record_date'),
-    db.from('moises_commercial_daily').select('record_date,sales,orders').eq('workspace_id',currentWorkspaceId).order('record_date')
+    db.from('moises_commercial_daily').select('record_date,sales,orders').eq('workspace_id',currentWorkspaceId).order('record_date'),
+    db.from('moises_monday_insights').select('id,monday_item_id,source_kind,group_title,item_name,owner_names,due_date,status,audience,published,executive_title,executive_summary,synced_at').eq('workspace_id',currentWorkspaceId).order('due_date',{ascending:false,nullsFirst:false}),
+    db.from('moises_monday_connections').select('board_name,last_synced_at,last_sync_status,last_sync_message').eq('workspace_id',currentWorkspaceId).maybeSingle()
   ]);
-  if(settingsError||trafficError||commercialError||!settings){showSync('Falha ao carregar dados');return false;}
+  if(settingsError||trafficError||commercialError||mondayError||!settings){showSync('Falha ao carregar dados');return false;}
+  mondayInsights=monday||[];mondayConnection=connection||null;
   Object.assign(base,{period_label:settings.period_label,operating_days:+settings.operating_days,spend:+settings.base_spend,revenue:+settings.base_revenue,orders:+settings.base_orders,leads:+settings.base_leads,previous_spend:+settings.previous_spend,previous_revenue:+settings.previous_revenue});base.ticket=base.orders?base.revenue/base.orders:0;
   el('budget').max=Math.ceil(base.spend);el('budget').min=Math.max(0,Math.floor(base.spend*.5));
   ['budget','days','hours','retention','conversion','margin'].forEach(k=>{if(settings[k]!=null&&el(k))el(k).value=settings[k]});
@@ -868,6 +893,7 @@ async function loadCloudData(){
   (commercial||[]).forEach(r=>{const row=byDate.get(r.record_date)||{date:r.record_date,media:0,leads:0,clicks:0,impressions:0,note:''};byDate.set(r.record_date,{...row,sales:Number(r.sales),orders:+r.orders})});
   dailyRecords=[...byDate.values()].sort((a,b)=>a.date.localeCompare(b.date));
   renderBaseline();
+  renderMonday();
   return true;
 }
 async function upsertDaily(date,changes){
@@ -884,6 +910,34 @@ async function upsertDaily(date,changes){
   dailyRecords=dailyRecords.filter(x=>x.date!==date).concat(next).sort((a,b)=>a.date.localeCompare(b.date));
   showSync('Dados sincronizados');return true;
 }
+
+function safeText(value){return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
+function renderMonday(){
+  const list=el('mondayList'),status=el('mondayStatus');if(!list||!status)return;
+  if(mondayConnection){const when=mondayConnection.last_synced_at?new Date(mondayConnection.last_synced_at).toLocaleString('pt-BR'):'ainda não sincronizado';status.textContent=mondayConnection.last_sync_status==='success'?mondayConnection.last_sync_message+' • '+when:(mondayConnection.last_sync_message||when)}
+  if(!mondayInsights.length){list.innerHTML='<div class="monday-empty">Clique em “Sincronizar Monday” para importar as tarefas do quadro Jonadson.</div>';return}
+  list.innerHTML=mondayInsights.map(row=>{const id=safeText(row.id),checked=row.published&&row.audience==='executive'?'checked':'';const meta=[row.group_title,row.due_date?row.due_date.split('-').reverse().join('/'):null,row.status].filter(Boolean).map(safeText).join(' • ');return `<article class="monday-item" data-insight="${id}"><div class="monday-meta">${meta||'Monday • conteúdo interno'}</div><h3>${safeText(row.item_name)}</h3><label class="monday-publish"><input type="checkbox" data-field="published" ${checked}> Mostrar na visão executiva</label><input type="text" data-field="title" value="${safeText(row.executive_title||row.item_name)}" placeholder="Título para os proprietários"><textarea data-field="summary" placeholder="Explique de forma simples o que você observou e por que isso importa.">${safeText(row.executive_summary||'')}</textarea><button class="monday-save" type="button" onclick="saveMondayInsight('${id}')">Salvar visão</button></article>`}).join('');
+}
+async function syncMonday(){
+  const button=el('syncMondayButton');button.disabled=true;showSync('Lendo o quadro Jonadson…');
+  const {data,error}=await db.functions.invoke('sync-moises-monday',{body:{}});
+  button.disabled=false;
+  if(error||!data?.ok){showSync('Falha na sincronização');alert(data?.detail||data?.error||'Não foi possível ler o Monday.');return}
+  await loadCloudData();showSync(`${data.synced} itens sincronizados`);
+}
+async function saveMondayInsight(id){
+  const card=document.querySelector(`[data-insight="${CSS.escape(id)}"]`);if(!card)return;
+  const published=card.querySelector('[data-field="published"]').checked;
+  const executive_title=card.querySelector('[data-field="title"]').value.trim();
+  const executive_summary=card.querySelector('[data-field="summary"]').value.trim();
+  if(published&&!executive_summary)return alert('Escreva um resumo simples antes de publicar.');
+  const {error}=await db.from('moises_monday_insights').update({published,audience:published?'executive':'internal',executive_title:executive_title||null,executive_summary:executive_summary||null,updated_at:new Date().toISOString()}).eq('id',id).eq('workspace_id',currentWorkspaceId);
+  if(error){showSync('Falha ao salvar');return alert('Não foi possível salvar esta visão.')}
+  const row=mondayInsights.find(x=>x.id===id);if(row)Object.assign(row,{published,audience:published?'executive':'internal',executive_title,executive_summary});
+  showSync(published?'Publicado na visão executiva':'Mantido somente no painel');
+}
+el('syncMondayButton')?.addEventListener('click',syncMonday);
+
 function subscribeRealtime(){
   if(realtimeChannel)db.removeChannel(realtimeChannel);
   const refresh=()=>{clearTimeout(realtimeTimer);realtimeTimer=setTimeout(async()=>{if(await loadCloudData()){updateCalculator();renderDaily();showSync('Atualizado em tempo real')}},250)};
@@ -891,6 +945,7 @@ function subscribeRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'moises_daily_metrics',filter:`workspace_id=eq.${currentWorkspaceId}`},refresh)
     .on('postgres_changes',{event:'*',schema:'public',table:'moises_commercial_daily',filter:`workspace_id=eq.${currentWorkspaceId}`},refresh)
     .on('postgres_changes',{event:'*',schema:'public',table:'moises_workspace_config',filter:`workspace_id=eq.${currentWorkspaceId}`},refresh)
+    .on('postgres_changes',{event:'*',schema:'public',table:'moises_monday_insights',filter:`workspace_id=eq.${currentWorkspaceId}`},refresh)
     .subscribe(status=>{if(status==='SUBSCRIBED')showSync('Sincronização em tempo real ativa')});
 }
 function fillDailySale(){const r=dailyRecords.find(x=>x.date===el('salesDate').value);el('salesValue').value=r?.sales||'';el('salesOrders').value=r?.orders??''}
