@@ -46,12 +46,12 @@
   form{grid-template-columns:1fr}
   .field.wide,.save,.message{grid-column:1}
 }
-</style><style>@media(max-width:700px){.actions a[hidden]+button{grid-column:1/-1}}</style></head>
+</style><style>.month-control{display:flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--muted);font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}.month-control select{border:0;outline:0;background:transparent;color:var(--ink);font-weight:800}@media(max-width:700px){.actions a[hidden]+button{grid-column:1/-1}.month-control{grid-column:1/-1;justify-content:center}}</style></head>
 <body class="auth-pending">
   <main class="shell">
     <header class="top">
       <div class="brand"><small>Operação Moisés</small><h1>Painel do Gestor de Tráfego</h1><p>Veja a orientação do dia e registre os números da plataforma de anúncios.</p><p class="account-line" id="account">Carregando acesso…</p></div>
-      <div class="actions"><a id="adminLink" href="./painel.html" hidden>Painel completo</a><button id="logout" type="button">Sair</button></div>
+      <div class="actions"><label class="month-control">Período<select id="monthSelector" aria-label="Selecionar mês"></select></label><a id="adminLink" href="./painel.html" hidden>Painel completo</a><button id="logout" type="button">Sair</button></div>
     </header>
     <div class="grid">
       <section class="card full">
@@ -105,11 +105,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.56.0/dist/umd/supabase.min.js"></script>
   <script>
     const db=window.supabase.createClient('https://nubzdbalhhqgrwjyjord.supabase.co','sb_publishable_TG0W0Ih25aHB2A7u0Tkdig_l6R168sd');
-    let user=null,workspaceId=null,guidance=null,records=[],realtimeChannel=null,realtimeTimer=null;
+    let user=null,workspaceId=null,guidance=null,records=[],allRecords=[],selectedMonth,realtimeChannel=null,realtimeTimer=null;
     const $=id=>document.getElementById(id),num=v=>Number(v)||0;
     const brl=v=>num(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
     const precise=v=>num(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
     const today=()=>{const d=new Date(),off=d.getTimezoneOffset();return new Date(d.getTime()-off*60000).toISOString().slice(0,10)};
+    const currentMonthKey=()=>today().slice(0,7);
+    const monthName=key=>{const [y,m]=key.split('-').map(Number),name=new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric'}).format(new Date(y,m-1,15));return name.charAt(0).toUpperCase()+name.slice(1)};
+    function syncMonthSelector(){const node=$('monthSelector'),keys=[...new Set(allRecords.map(r=>r.record_date.slice(0,7)).concat(currentMonthKey()))].sort().reverse();if(!selectedMonth||!keys.includes(selectedMonth))selectedMonth=currentMonthKey();node.innerHTML=keys.map(k=>`<option value="${k}">${monthName(k)}</option>`).join('');node.value=selectedMonth;records=allRecords.filter(r=>r.record_date.startsWith(selectedMonth+'-'))}
     function loginUrl(){return location.pathname.replace(/gestor\.html$/,'index.html')||'./index.html'}
     function showSync(text){$('sync').textContent=text;$('sync').classList.add('show');clearTimeout(showSync.t);showSync.t=setTimeout(()=>$('sync').classList.remove('show'),1500)}
     function totals(){return records.reduce((a,r)=>{a.media+=num(r.media_spend);a.leads+=num(r.leads);a.clicks+=num(r.clicks);a.impressions+=num(r.impressions);return a},{media:0,leads:0,clicks:0,impressions:0})}
@@ -122,17 +125,18 @@
       $('history').innerHTML=records.length?[...records].reverse().map(r=>`<tr><td>${r.record_date.split('-').reverse().join('/')}</td><td>${brl(r.media_spend)}</td><td>${num(r.leads).toLocaleString('pt-BR')}</td><td>${num(r.clicks).toLocaleString('pt-BR')}</td><td>${num(r.impressions)?precise(num(r.clicks)/num(r.impressions)*100)+'%':'—'}</td><td>${num(r.leads)?brl(num(r.media_spend)/num(r.leads)):'—'}</td><td class="note">${escapeHtml(r.action_note||'—')}</td></tr>`).join(''):'<tr><td colspan="7" class="empty">Nenhum desempenho registrado.</td></tr>';
     }
     function escapeHtml(value){const d=document.createElement('div');d.textContent=value;return d.innerHTML}
-    function fillDate(date){const r=records.find(x=>x.record_date===date);['media','leads','clicks','impressions'].forEach(k=>$(k).value=r?num(r[k==='media'?'media_spend':k]):'');$('note').value=r?.action_note||''}
+    function fillDate(date){const r=allRecords.find(x=>x.record_date===date);['media','leads','clicks','impressions'].forEach(k=>$(k).value=r?num(r[k==='media'?'media_spend':k]):'');$('note').value=r?.action_note||''}
     async function load(){
       const {data:{session}}=await db.auth.getSession();if(!session){location.replace(loginUrl());return}user=session.user;
       const {data:member,error:memberError}=await db.from('moises_workspace_members').select('workspace_id,role').eq('user_id',user.id).single();if(memberError||!member){alert('Seu acesso ainda não está vinculado à operação.');return}
       if(!['admin','traffic_manager'].includes(member.role)){location.replace(member.role==='viewer'?'./apresentacao.html':'./index.html');return}workspaceId=member.workspace_id;$('account').textContent=`${user.email} • ${member.role==='admin'?'Administrador':'Gestor de tráfego'}`;$('adminLink').hidden=member.role!=='admin';
       if(!await reloadData()){alert('Não foi possível carregar os dados.');return}$('date').value=today();fillDate($('date').value);render();subscribeRealtime();document.body.classList.remove('auth-pending');
     }
-    async function reloadData(){const [{data:guide,error:guideError},{data:daily,error:dailyError}]=await Promise.all([db.from('moises_traffic_guidance').select('*').eq('workspace_id',workspaceId).single(),db.from('moises_daily_metrics').select('workspace_id,record_date,media_spend,leads,clicks,impressions,action_note,updated_at').eq('workspace_id',workspaceId).order('record_date')]);if(guideError||dailyError)return false;guidance=guide;records=daily||[];return true}
+    async function reloadData(){const [{data:guide,error:guideError},{data:daily,error:dailyError}]=await Promise.all([db.from('moises_traffic_guidance').select('*').eq('workspace_id',workspaceId).single(),db.from('moises_daily_metrics').select('workspace_id,record_date,media_spend,leads,clicks,impressions,action_note,updated_at').eq('workspace_id',workspaceId).order('record_date')]);if(guideError||dailyError)return false;guidance=guide;allRecords=daily||[];syncMonthSelector();return true}
     function subscribeRealtime(){if(realtimeChannel)db.removeChannel(realtimeChannel);const refresh=()=>{clearTimeout(realtimeTimer);realtimeTimer=setTimeout(async()=>{if(await reloadData()){fillDate($('date').value);render();showSync('Atualizado em tempo real')}},250)};realtimeChannel=db.channel(`moises-traffic-${workspaceId}`).on('postgres_changes',{event:'*',schema:'public',table:'moises_daily_metrics',filter:`workspace_id=eq.${workspaceId}`},refresh).on('postgres_changes',{event:'*',schema:'public',table:'moises_traffic_guidance',filter:`workspace_id=eq.${workspaceId}`},refresh).subscribe(status=>{if(status==='SUBSCRIBED')showSync('Sincronização em tempo real ativa')})}
+    $('monthSelector').addEventListener('change',e=>{selectedMonth=e.target.value;records=allRecords.filter(r=>r.record_date.startsWith(selectedMonth+'-'));render();showSync('Período atualizado')});
     $('date').addEventListener('change',e=>fillDate(e.target.value));
-    $('dailyForm').addEventListener('submit',async e=>{e.preventDefault();const button=$('save'),date=$('date').value;button.disabled=true;$('message').textContent='';showSync('Salvando…');const payload={workspace_id:workspaceId,record_date:date,media_spend:num($('media').value),leads:num($('leads').value),clicks:num($('clicks').value),impressions:num($('impressions').value),action_note:$('note').value.trim()||'',updated_by:user.id,updated_at:new Date().toISOString()};const {data,error}=await db.from('moises_daily_metrics').upsert(payload,{onConflict:'workspace_id,record_date'}).select().single();button.disabled=false;if(error){$('message').textContent='Não foi possível salvar. Tente novamente.';showSync('Falha ao salvar');return}records=records.filter(r=>r.record_date!==date).concat(data).sort((a,b)=>a.record_date.localeCompare(b.record_date));$('message').textContent='Desempenho de mídia salvo. A orientação será atualizada automaticamente.';showSync('Dados sincronizados');render()});
+    $('dailyForm').addEventListener('submit',async e=>{e.preventDefault();const button=$('save'),date=$('date').value;button.disabled=true;$('message').textContent='';showSync('Salvando…');const payload={workspace_id:workspaceId,record_date:date,media_spend:num($('media').value),leads:num($('leads').value),clicks:num($('clicks').value),impressions:num($('impressions').value),action_note:$('note').value.trim()||'',updated_by:user.id,updated_at:new Date().toISOString()};const {data,error}=await db.from('moises_daily_metrics').upsert(payload,{onConflict:'workspace_id,record_date'}).select().single();button.disabled=false;if(error){$('message').textContent='Não foi possível salvar. Tente novamente.';showSync('Falha ao salvar');return}allRecords=allRecords.filter(r=>r.record_date!==date).concat(data).sort((a,b)=>a.record_date.localeCompare(b.record_date));selectedMonth=date.slice(0,7);syncMonthSelector();$('message').textContent='Desempenho de mídia salvo. A orientação será atualizada automaticamente.';showSync('Dados sincronizados');render()});
     $('logout').addEventListener('click',async()=>{await db.auth.signOut();location.replace(loginUrl())});db.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||!session)location.replace(loginUrl())});load();
   </script>
 </body>
