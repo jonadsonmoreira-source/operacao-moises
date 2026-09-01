@@ -1,0 +1,15 @@
+:root{--brand-accent:var(--pink,#f4589b);--brand-secondary:var(--purple,#6d2ccf)}
+.workspace-control{display:flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid var(--line,#eadde8);border-radius:999px;background:var(--surface,#fff);color:var(--muted,#75687b);font-size:9px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
+.workspace-control select{max-width:190px;border:0;outline:0;background:transparent;color:var(--ink,#23172b);font:800 11px/1.2 inherit;cursor:pointer}
+html[data-theme="dark"] .workspace-control{background:#291a30;border-color:#4a3552}
+html[data-theme="dark"] .workspace-control select{color:#f7eef9}
+@media(max-width:700px){.workspace-control{grid-column:1/-1;justify-content:center;border-radius:12px}.workspace-control select{max-width:220px}}
+html[data-workspace="porto"] body{background-image:radial-gradient(circle at 90% 0,#f6e7ad55,transparent 28%),linear-gradient(145deg,#fff,#fffdf7)}
+html[data-workspace="porto"] .hero{background:linear-gradient(125deg,#d4af37,#92701f 62%,#4d3910)}
+html[data-workspace="porto"] .metric strong,html[data-workspace="porto"] .mini strong{color:#765915}
+html[data-workspace="porto"] .sales{background:linear-gradient(#e1bd45,#8a6720)}
+html[data-workspace="porto"] .strategy-progress{background:linear-gradient(125deg,#6c5118,#d4af37)}
+html[data-workspace="porto"] .deck-line{stroke:#e4c758}
+html[data-workspace="porto"] .deck-dot{stroke:#d4af37}
+html[data-workspace="porto"] .deck-fill.current,html[data-workspace="porto"] .deck-progress i{background:linear-gradient(90deg,#b68d21,#f0d777)}
+html[data-workspace="porto"] .deck-ring{background:conic-gradient(#d4af37 calc(var(--value)*1%),#ffffff13 0)}

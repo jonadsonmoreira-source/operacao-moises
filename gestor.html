@@ -46,12 +46,12 @@
   form{grid-template-columns:1fr}
   .field.wide,.save,.message{grid-column:1}
 }
-</style><style>.month-control{display:flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--muted);font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}.month-control select{border:0;outline:0;background:transparent;color:var(--ink);font-weight:800}@media(max-width:700px){.actions a[hidden]+button{grid-column:1/-1}.month-control{grid-column:1/-1;justify-content:center}}</style></head>
+</style><style>.month-control{display:flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--muted);font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}.month-control select{border:0;outline:0;background:transparent;color:var(--ink);font-weight:800}@media(max-width:700px){.actions a[hidden]+button{grid-column:1/-1}.month-control{grid-column:1/-1;justify-content:center}}</style><link rel="stylesheet" href="./workspace.css"></head>
 <body class="auth-pending">
   <main class="shell">
     <header class="top">
-      <div class="brand"><small>Operação Moisés</small><h1>Painel do Gestor de Tráfego</h1><p>Veja a orientação do dia e registre os números da plataforma de anúncios.</p><p class="account-line" id="account">Carregando acesso…</p></div>
-      <div class="actions"><label class="month-control">Período<select id="monthSelector" aria-label="Selecionar mês"></select></label><a id="adminLink" href="./painel.html" hidden>Painel completo</a><button id="logout" type="button">Sair</button></div>
+      <div class="brand"><small data-workspace-brand>Operação Moisés</small><h1>Painel do Gestor de Tráfego</h1><p>Veja a orientação do dia e registre os números da plataforma de anúncios.</p><p class="account-line" id="account">Carregando acesso…</p></div>
+      <div class="actions"><label class="workspace-control">Loja<select id="workspaceSelector" aria-label="Selecionar loja"></select></label><label class="month-control">Período<select id="monthSelector" aria-label="Selecionar mês"></select></label><a href="./lojas.html">Todas as lojas</a><a data-workspace-link id="adminLink" href="./painel.html" hidden>Painel completo</a><button id="logout" type="button">Sair</button></div>
     </header>
     <div class="grid">
       <section class="card full">
@@ -102,7 +102,7 @@
     </div>
   </main>
   <div class="sync" id="sync">Sincronizando…</div>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.56.0/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.56.0/dist/umd/supabase.min.js"></script><script src="./workspace.js"></script>
   <script>
     const db=window.supabase.createClient('https://nubzdbalhhqgrwjyjord.supabase.co','sb_publishable_TG0W0Ih25aHB2A7u0Tkdig_l6R168sd');
     let user=null,workspaceId=null,guidance=null,records=[],allRecords=[],selectedMonth,realtimeChannel=null,realtimeTimer=null;
@@ -128,8 +128,8 @@
     function fillDate(date){const r=allRecords.find(x=>x.record_date===date);['media','leads','clicks','impressions'].forEach(k=>$(k).value=r?num(r[k==='media'?'media_spend':k]):'');$('note').value=r?.action_note||''}
     async function load(){
       const {data:{session}}=await db.auth.getSession();if(!session){location.replace(loginUrl());return}user=session.user;
-      const {data:member,error:memberError}=await db.from('moises_workspace_members').select('workspace_id,role').eq('user_id',user.id).single();if(memberError||!member){alert('Seu acesso ainda não está vinculado à operação.');return}
-      if(!['admin','traffic_manager'].includes(member.role)){location.replace(member.role==='viewer'?'./apresentacao.html':'./index.html');return}workspaceId=member.workspace_id;$('account').textContent=`${user.email} • ${member.role==='admin'?'Administrador':'Gestor de tráfego'}`;$('adminLink').hidden=member.role!=='admin';
+      let access;try{access=await MoisesWorkspace.resolve(db,user.id)}catch(error){}const member=access?.membership;if(!member){alert('Seu acesso ainda não está vinculado à operação.');return}
+      if(!['admin','traffic_manager'].includes(member.role)){location.replace(MoisesWorkspace.workspaceUrl('./'+MoisesWorkspace.routeFor(member.role),member.workspace_id));return}workspaceId=member.workspace_id;MoisesWorkspace.applyBrand(access.workspace);MoisesWorkspace.wireSelector($('workspaceSelector'),access.memberships,member);MoisesWorkspace.wireLinks(workspaceId);$('account').textContent=`${user.email} • ${member.role==='admin'?'Administrador':'Gestor de tráfego'}`;$('adminLink').hidden=member.role!=='admin';
       if(!await reloadData()){alert('Não foi possível carregar os dados.');return}$('date').value=today();fillDate($('date').value);render();subscribeRealtime();document.body.classList.remove('auth-pending');
     }
     async function reloadData(){const [{data:guide,error:guideError},{data:daily,error:dailyError}]=await Promise.all([db.from('moises_traffic_guidance').select('*').eq('workspace_id',workspaceId).single(),db.from('moises_daily_metrics').select('workspace_id,record_date,media_spend,leads,clicks,impressions,action_note,updated_at').eq('workspace_id',workspaceId).order('record_date')]);if(guideError||dailyError)return false;guidance=guide;allRecords=daily||[];syncMonthSelector();return true}

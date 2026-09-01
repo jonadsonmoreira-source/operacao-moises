@@ -326,10 +326,10 @@ select{
   .metric{padding:11px}.metric strong{font-size:19px}
   .result-grid{grid-template-columns:1fr}
 }
-</style><style>@media(max-width:700px){body{padding-bottom:150px}.account-bar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));bottom:7px}.account-bar .month-control{grid-column:1/-1;justify-content:center}.account-bar a,.account-bar button{width:100%}.sync-state{bottom:142px}}</style></head>
+</style><style>@media(max-width:700px){body{padding-bottom:190px}.account-bar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));bottom:7px}.account-bar .month-control{grid-column:1/-1;justify-content:center}.account-bar a,.account-bar button{width:100%}.sync-state{bottom:182px}}</style><link rel="stylesheet" href="./workspace.css"></head>
 <body class="auth-pending">
 
-<div class="account-bar"><span id="accountEmail"></span><label class="month-control">Período<select id="monthSelector" aria-label="Selecionar mês"></select></label><a href="./apresentacao.html">Visão executiva</a><a href="./gestor.html">Painel do tráfego</a><button class="invite-button" id="inviteButton" type="button">Gerenciar acessos</button><button id="logoutButton" type="button">Sair</button></div>
+<div class="account-bar"><span id="accountEmail"></span><label class="workspace-control">Loja<select id="workspaceSelector" aria-label="Selecionar loja"></select></label><label class="month-control">Período<select id="monthSelector" aria-label="Selecionar mês"></select></label><a href="./lojas.html">Todas as lojas</a><a data-workspace-link href="./apresentacao.html">Visão executiva</a><a data-workspace-link href="./gestor.html">Painel do tráfego</a><button class="invite-button" id="inviteButton" type="button">Gerenciar acessos</button><button id="logoutButton" type="button">Sair</button></div>
 <div class="sync-state" id="syncState">Sincronizando…</div>
 <div class="access-modal" id="accessModal" role="dialog" aria-modal="true" aria-labelledby="accessTitle">
   <div class="access-card">
@@ -352,9 +352,9 @@ select{
 
 <section id="c1" class="chapter hero">
   <div class="inner reveal">
-    <div class="kicker">Jaraguá Colchões e Estofados</div>
+    <div class="kicker" data-workspace-brand>Jaraguá Colchões e Estofados</div>
     <h1>Operação <span>Moisés</span></h1>
-    <div class="quote">Um projeto para descobrir o custo real necessário para sustentar o faturamento da Jaraguá e direcionar o excedente para onde o grupo gera mais valor.</div>
+    <div class="quote" id="workspaceQuote">Um projeto para descobrir o custo real necessário para sustentar o faturamento da Jaraguá e direcionar o excedente para onde o grupo gera mais valor.</div>
   </div>
   <div class="scroll-hint">Role para continuar ↓</div>
 </section>
@@ -664,7 +664,7 @@ select{
   </div>
 </section>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.56.0/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.56.0/dist/umd/supabase.min.js"></script><script src="./workspace.js"></script>
 <script>
 const SUPABASE_URL='https://nubzdbalhhqgrwjyjord.supabase.co';
 const SUPABASE_KEY='sb_publishable_TG0W0Ih25aHB2A7u0Tkdig_l6R168sd';
@@ -672,6 +672,8 @@ const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let currentUser=null;
 let currentWorkspaceId=null;
 let currentRole=null;
+let currentWorkspace=null;
+let currentMemberships=[];
 let dailyRecords=[];
 let allDailyRecords=[];
 let selectedMonth=null;
@@ -690,13 +692,15 @@ async function requireAuth(){
   const {data:{session}}=await db.auth.getSession();
   if(!session){ location.replace(loginUrl()); return false; }
   currentUser=session.user;
-  const {data:membership,error}=await db.from('moises_workspace_members').select('workspace_id,role').eq('user_id',currentUser.id).single();
-  if(error||!membership){await db.auth.signOut();location.replace(loginUrl());return false}
-  currentWorkspaceId=membership.workspace_id;currentRole=membership.role;
+  let access;try{access=await MoisesWorkspace.resolve(db,currentUser.id)}catch(error){}
+  if(!access?.membership){await db.auth.signOut();location.replace(loginUrl());return false}
+  currentMemberships=access.memberships;currentWorkspace=access.workspace;currentWorkspaceId=access.membership.workspace_id;currentRole=access.membership.role;
   if(currentRole!=='admin'){
-    location.replace(currentRole==='traffic_manager'?'./gestor.html':currentRole==='viewer'?'./apresentacao.html':loginUrl());
+    location.replace(MoisesWorkspace.workspaceUrl('./'+MoisesWorkspace.routeFor(currentRole),currentWorkspaceId));
     return false;
   }
+  MoisesWorkspace.applyBrand(currentWorkspace);MoisesWorkspace.wireSelector(document.getElementById('workspaceSelector'),currentMemberships,access.membership);MoisesWorkspace.wireLinks(currentWorkspaceId);
+  document.getElementById('workspaceQuote').textContent=currentWorkspace?.slug==='porto'?'Um projeto para acompanhar a Porto desde o primeiro dia, transformar cada campanha em aprendizado e construir uma operação cada vez mais eficiente.':'Um projeto para descobrir o custo real necessário para sustentar o faturamento da Jaraguá e direcionar o excedente para onde o grupo gera mais valor.';
   document.getElementById('accountEmail').textContent=currentUser.email||'Conta conectada';
   document.body.classList.remove('auth-pending');
   return true;
@@ -768,6 +772,12 @@ function renderBaseline(){
   const revenueGrowth=base.previous_revenue?(base.revenue/base.previous_revenue-1)*100:0;
   const spendGrowth=base.previous_spend?(base.spend/base.previous_spend-1)*100:0;
   const efficiencyDelta=previousRoas?(roas/previousRoas-1)*100:0;
+  if(!base.revenue&&!base.spend){
+    el('baselineTitle').textContent='Primeira referência em construção';
+    el('baselineDescription').textContent='A operação está começando do zero. Os primeiros registros de vendas e mídia formarão a base para as próximas decisões.';
+    el('baseRevenue').textContent='R$ 0';el('baseSpend').textContent='R$ 0';el('baseRoas').textContent='—';el('baseConversion').textContent='—';el('baseOrdersLeads').textContent='aguardando primeiros registros';el('baseLeads').textContent='—';el('baseLeadsDaily').textContent='sem histórico ainda';el('baseSpendDaily').textContent='—';el('baseOperatingDays').textContent='primeiro mês da operação';el('revenueGrowth').textContent='Nova';el('revenueComparison').textContent='começando do zero';el('spendGrowth').textContent='Nova';el('spendComparison').textContent='sem base anterior';el('previousRoas').textContent='—';el('currentRoas').textContent='—';el('roasDelta').textContent='a eficiência aparecerá com os primeiros dados';el('flowCurrentSpend').textContent='R$ 0';el('flowTargetSpend').textContent=compact(+el('budget').value);
+    return;
+  }
   el('baselineTitle').textContent=`${base.period_label} em uma tela`;
   el('baselineDescription').textContent=`Resultado analisado: ${base.operating_days} dias de operação, com os domingos fora da conta. Este é o faturamento que queremos preservar nos próximos testes.`;
   el('baseRevenue').textContent=compact(base.revenue);el('baseSpend').textContent=compact(base.spend);el('baseRoas').textContent=roas.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'x';
@@ -787,6 +797,11 @@ function updateCalculator(){
   const retentionValue=Number(el('retention').value);
   const conversionValue=Number(el('conversion').value);
   const marginValue=Number(el('margin').value);
+
+  if(!base.revenue||!base.spend||!base.ticket){
+    el('budgetLabel').textContent=brl(budgetValue);el('flowTargetSpend').textContent=compact(budgetValue);el('daysLabel').textContent=daysValue+' dias';el('hoursLabel').textContent=hoursValue+'h/dia';el('retLabel').textContent=retentionValue.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%';el('convLabel').textContent=conversionValue.toLocaleString('pt-BR',{maximumFractionDigits:2})+'%';el('marginLabel').textContent=marginValue.toLocaleString('pt-BR',{maximumFractionDigits:0})+'%';el('saving').textContent='—';el('savingPct').textContent='aguardando a primeira base';el('daily').textContent=daysValue?brl(budgetValue/daysValue):'—';el('dailyFoot').textContent='planejamento inicial';el('windowResult').textContent=hoursValue+'h/dia';el('windowFoot').textContent=hoursValue===24?'campanha disponível 24 horas':'janela definida';el('minRevenue').textContent='—';el('revLoss').textContent='sem histórico para comparar';el('roasNeed').textContent='—';el('ordersNeed').textContent='—';el('leadsNeed').textContent='—';el('leadDelta').textContent='os primeiros dados criarão a referência';el('lostContribution').textContent='—';el('marginExplain').textContent='cálculo disponível após a primeira base';el('economicImpact').textContent='Em construção';el('economicText').textContent='Registre vendas, pedidos e mídia. O painel começará a calcular a eficiência conforme a Porto formar seu histórico.';
+    return;
+  }
 
   const mediaSaving=base.spend-budgetValue;
   const mediaSavingPct=mediaSaving/base.spend*100;
@@ -884,9 +899,6 @@ async function saveSettings(){
   showSync(error?'Falha ao sincronizar':'Dados sincronizados');
 }
 async function loadCloudData(){
-  const {data:membership,error:membershipError}=await db.from('moises_workspace_members').select('workspace_id,role').eq('user_id',currentUser.id).single();
-  if(membershipError||!membership){showSync('Acesso não vinculado');return false}
-  currentWorkspaceId=membership.workspace_id;currentRole=membership.role;
   const [{data:settings,error:settingsError},{data:traffic,error:trafficError},{data:commercial,error:commercialError},{data:monday,error:mondayError},{data:connection}]=await Promise.all([
     db.from('moises_workspace_config').select('*').eq('workspace_id',currentWorkspaceId).single(),
     db.from('moises_daily_metrics').select('record_date,media_spend,leads,clicks,impressions,action_note').eq('workspace_id',currentWorkspaceId).order('record_date'),
@@ -904,7 +916,7 @@ async function loadCloudData(){
   (commercial||[]).forEach(r=>{const row=byDate.get(r.record_date)||{date:r.record_date,media:0,leads:0,clicks:0,impressions:0,note:''};byDate.set(r.record_date,{...row,sales:Number(r.sales),orders:+r.orders})});
   allDailyRecords=[...byDate.values()].sort((a,b)=>a.date.localeCompare(b.date));
   syncMonthSelector();
-  el('budget').max=Math.ceil(base.spend);el('budget').min=Math.max(0,Math.floor(base.spend*.5));
+  el('budget').max=base.spend?Math.ceil(base.spend):1000000;el('budget').min=base.spend?Math.max(0,Math.floor(base.spend*.5)):0;
   renderBaseline();
   renderMonday();
   return true;
@@ -1013,7 +1025,7 @@ function renderDailyPlan(data){
  else{document.getElementById('planTitle').textContent='Ritmo necessário daqui para frente';document.getElementById('planText').textContent=`Para fechar o mês com a economia-alvo, gaste no máximo ${brl(mediaCeiling)} por dia e venda ao menos ${brl(minimumSale)} por dia nos dias restantes.`;document.getElementById('planAction').textContent=`Se buscar preservar toda a base de faturamento, a referência sobe para ${brl(fullTargetSale)} em vendas por dia.`;box.style.background='#fff8ec'}
 }
 ['budget','days'].forEach(id=>document.getElementById(id)?.addEventListener('input',renderDaily));
-el('monthSelector').addEventListener('change',e=>{selectedMonth=e.target.value;applySelectedMonth();el('budget').max=Math.ceil(base.spend);el('budget').min=Math.max(0,Math.floor(base.spend*.5));renderBaseline();updateCalculator();renderDaily();showSync('Período atualizado')});
+el('monthSelector').addEventListener('change',e=>{selectedMonth=e.target.value;applySelectedMonth();el('budget').max=base.spend?Math.ceil(base.spend):1000000;el('budget').min=base.spend?Math.max(0,Math.floor(base.spend*.5)):0;renderBaseline();updateCalculator();renderDaily();showSync('Período atualizado')});
 async function boot(){
   if(!await requireAuth())return;
   if(!await loadCloudData())return;

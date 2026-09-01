@@ -27,7 +27,7 @@
 </style></head>
 <body>
   <main class="card">
-    <div class="kicker">Jaraguá Colchões e Estofados</div>
+    <div class="kicker">Ecossistema de gestão</div>
     <h1>Operação <span>Moisés</span></h1>
     <p>Entre para acessar o painel e manter os dados sincronizados em todos os dispositivos.</p>
     <form id="loginForm">
@@ -46,14 +46,14 @@
     </form>
     <div class="foot">Acesso restrito • dados protegidos por usuário</div>
   </main>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.56.0/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.56.0/dist/umd/supabase.min.js"></script><script src="./workspace.js"></script>
   <script>
     const db=window.supabase.createClient('https://nubzdbalhhqgrwjyjord.supabase.co','sb_publishable_TG0W0Ih25aHB2A7u0Tkdig_l6R168sd');
     const form=document.getElementById('loginForm'),button=document.getElementById('submitButton'),message=document.getElementById('message'),resetForm=document.getElementById('resetForm'),resetMessage=document.getElementById('resetMessage');
     let recoveryMode=location.hash.includes('type=recovery')||location.search.includes('type=recovery');
     function showRecovery(){recoveryMode=true;form.classList.add('hidden');resetForm.classList.remove('hidden')}
     db.auth.onAuthStateChange(event=>{if(event==='PASSWORD_RECOVERY')showRecovery()});
-    async function openCorrectPanel(){const {data:{session}}=await db.auth.getSession();if(!session)return;const {data:member}=await db.from('moises_workspace_members').select('role').eq('user_id',session.user.id).single();const routes={admin:'./painel.html',traffic_manager:'./gestor.html',viewer:'./apresentacao.html'};location.replace(routes[member?.role]||'./index.html')}
+    async function openCorrectPanel(){const {data:{session}}=await db.auth.getSession();if(!session)return;let memberships=[];try{memberships=await MoisesWorkspace.memberships(db,session.user.id)}catch(e){}if(!memberships.length)return;const member=MoisesWorkspace.choose(memberships);if(memberships.length>1){location.replace('./lojas.html');return}location.replace(MoisesWorkspace.workspaceUrl('./'+MoisesWorkspace.routeFor(member.role),member.workspace_id))}
     db.auth.getSession().then(({data:{session}})=>{if(recoveryMode)showRecovery();else if(session)openCorrectPanel()});
     form.addEventListener('submit',async e=>{e.preventDefault();message.textContent='';button.disabled=true;button.textContent='Entrando…';const {error}=await db.auth.signInWithPassword({email:email.value.trim(),password:password.value});if(error){message.textContent='E-mail ou senha inválidos.';button.disabled=false;button.textContent='Entrar no painel';return}await openCorrectPanel()});
     document.getElementById('forgotButton').addEventListener('click',async()=>{const address=email.value.trim();if(!address){message.textContent='Informe o e-mail acima.';email.focus();return}message.textContent='Enviando link…';const {error}=await db.auth.resetPasswordForEmail(address,{redirectTo:location.origin+location.pathname});message.classList.toggle('success',!error);message.textContent=error?'Não foi possível enviar agora. Tente novamente.':'Link enviado. Verifique a caixa de entrada e o spam.'});
