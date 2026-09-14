@@ -143,40 +143,58 @@ function applyReliableRoasSummary(){
   const reliableEfficiency=baseRoas?(reliableRoas/baseRoas-1)*100:0;
   const lastSales=salesRows.at(-1)?.date,lastMedia=mediaRows.at(-1)?.date,lastMatched=matched.at(-1)?.date;
   const incomplete=lastSales!==lastMedia,closed=selectedMonth<currentMonthKey();
-  const current=monthName(selectedMonth).split('/')[0],previous=monthName(previousMonthKey(selectedMonth)).split('/')[0];
+  const current=monthName(selectedMonth).split('/')[0],previousKey=previousMonthKey(selectedMonth),previous=monthName(previousKey).split('/')[0];
   const shortDate=date=>date?date.split('-').reverse().slice(0,2).join('/'):'—';
+  const pct=(currentValue,previousValue)=>previousValue?(currentValue/previousValue-1)*100:0;
+  const direction=value=>value>=0?'acima':'abaixo';
+  const amount=value=>Math.abs(value).toLocaleString('pt-BR',{maximumFractionDigits:1});
   $('roas').textContent=reliableRoas.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'x';
   $('roas').nextElementSibling.textContent=`até ${shortDate(lastMatched)} • dias conciliados`;
   $('efficiency').textContent=reliableEfficiency.toLocaleString('pt-BR',{maximumFractionDigits:1,signDisplay:'always'})+'%';
-  $('budgetRemaining').textContent=reliableEfficiency.toLocaleString('pt-BR',{maximumFractionDigits:1,signDisplay:'always'})+'%';
-  $('efficiencyCompare').textContent=`ROAS confirmado contra ${previous.toLowerCase()}.`;
   $('reading').className=incomplete?'reading warn':'reading';
   if(closed){
     $('readingTitle').textContent=`${current}: resultado consolidado`;
-    $('readingText').textContent=`No fechamento, cada R$ 1 investido gerou R$ ${reliableRoas.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})} em vendas — ${Math.abs(reliableEfficiency).toLocaleString('pt-BR',{maximumFractionDigits:1})}% ${reliableEfficiency>=0?'acima':'abaixo'} de ${previous.toLowerCase()}.`;
+    $('readingText').textContent=`No fechamento, cada R$ 1 investido gerou R$ ${reliableRoas.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})} em vendas — ${amount(reliableEfficiency)}% ${direction(reliableEfficiency)} de ${previous.toLowerCase()}.`;
     return;
   }
+  const cutoffDay=Math.min(Number(lastSales.slice(-2)),Number(lastMedia.slice(-2)));
+  const throughCutoff=list=>list.filter(r=>Number(r.date.slice(-2))<=cutoffDay);
+  const sumPeriod=list=>throughCutoff(list).reduce((a,r)=>({sales:a.sales+r.sales,orders:a.orders+r.orders,media:a.media+r.media}),{sales:0,orders:0,media:0});
+  const currentPeriod=sumPeriod(all),previousRows=rowsForMonth(previousKey),previousPeriod=sumPeriod(previousRows);
+  const hasComparablePrevious=previousPeriod.sales>0&&previousPeriod.media>0;
+  const periodRevenueDiff=pct(currentPeriod.sales,previousPeriod.sales);
+  const periodOrdersDiff=pct(currentPeriod.orders,previousPeriod.orders);
+  const periodMediaDiff=pct(currentPeriod.media,previousPeriod.media);
+  const currentPeriodRoas=currentPeriod.media?currentPeriod.sales/currentPeriod.media:0;
+  const previousPeriodRoas=previousPeriod.media?previousPeriod.sales/previousPeriod.media:0;
+  const periodRoasDiff=pct(currentPeriodRoas,previousPeriodRoas);
   const salesProjectionDays=operatingDaysFor(all),mediaProjectionDays=calendarDaysFor(all);
   const projectedSales=salesRows.length?sales/salesRows.length*salesProjectionDays:0;
   const projectedOrders=salesRows.length?orders/salesRows.length*salesProjectionDays:0;
   const projectedMedia=mediaRows.length?media/mediaRows.length*mediaProjectionDays:0;
-  const revenueDiff=baseS?(projectedSales/baseS-1)*100:0,ordersDiff=baseO?(projectedOrders/baseO-1)*100:0,mediaDiff=baseM?(projectedMedia/baseM-1)*100:0;
-  const direction=value=>value>=0?'acima':'abaixo';
-  const projectedText=(value,label)=>`${Math.abs(value).toLocaleString('pt-BR',{maximumFractionDigits:1})}% ${label||direction(value)}`;
+  const revenueDiff=baseS?pct(projectedSales,baseS):0,ordersDiff=baseO?pct(projectedOrders,baseO):0,mediaDiff=baseM?pct(projectedMedia,baseM):0;
   const labels=document.querySelectorAll('.simple-reading .mini small');
   if(labels.length>=4){labels[0].textContent='Faturamento projetado';labels[1].textContent='Pedidos projetados';labels[2].textContent='Investimento projetado';labels[3].textContent='Retorno atual da mídia'}
-  $('comparisonTitle').textContent=`Projeção para o fechamento de ${current}`;
+  $('comparisonTitle').textContent='Mantendo este ritmo até o fim do mês';
   animateValue($('revenueGoal'),Math.abs(revenueDiff),v=>v.toLocaleString('pt-BR',{maximumFractionDigits:1})+'% '+direction(revenueDiff),120);
   animateValue($('budgetGoal'),Math.abs(ordersDiff),v=>v.toLocaleString('pt-BR',{maximumFractionDigits:1})+'% '+direction(ordersDiff),190);
   animateValue($('revenueRemaining'),Math.abs(mediaDiff),v=>v.toLocaleString('pt-BR',{maximumFractionDigits:1})+'% '+(mediaDiff<=0?'menos mídia':'mais mídia'),260);
-  animateValue($('budgetRemaining'),reliableRoas,v=>'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}),330);
-  $('revenueCompare').textContent='Se o ritmo atual continuar.';
-  $('ordersCompare').textContent='Se o ritmo atual continuar.';
-  $('mediaCompare').textContent='Comparação com o total de '+previous.toLowerCase()+'.';
+  animateValue($('budgetRemaining'),currentPeriodRoas,v=>'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}),330);
+  $('revenueCompare').textContent='Projeção contra o fechamento de '+previous.toLowerCase()+'.';
+  $('ordersCompare').textContent='Projeção contra o fechamento de '+previous.toLowerCase()+'.';
+  $('mediaCompare').textContent='Projeção contra o investimento total de '+previous.toLowerCase()+'.';
   $('efficiencyCompare').textContent='Em vendas para cada R$ 1 investido.';
-  const revenuePhrase=projectedText(revenueDiff),ordersPhrase=projectedText(ordersDiff),mediaPhrase=projectedText(mediaDiff,mediaDiff<=0?'menos investimento':'mais investimento');
-  $('readingTitle').textContent=`O ritmo atual aponta para fechar ${direction(revenueDiff)} de ${previous.toLowerCase()}`;
-  $('readingText').textContent=`Mantendo a média atual, ${current.toLowerCase()} pode fechar cerca de ${revenuePhrase} em faturamento e ${ordersPhrase} em pedidos, com aproximadamente ${mediaPhrase} em mídia. Dados parciais: vendas até ${shortDate(lastSales)} e mídia até ${shortDate(lastMedia)}.`;
+  if(hasComparablePrevious){
+    const samePeriod=`01 a ${String(cutoffDay).padStart(2,'0')}/${selectedMonth.slice(5)}`;
+    const sellsMore=periodRevenueDiff>=0,spendsLess=periodMediaDiff<=0;
+    $('readingTitle').textContent=sellsMore&&spendsLess
+      ?`${current} está vendendo mais com menos mídia`
+      :`${current} comparado ao mesmo período de ${previous.toLowerCase()}`;
+    $('readingText').textContent=`De ${samePeriod}, o faturamento está ${amount(periodRevenueDiff)}% ${direction(periodRevenueDiff)} do mesmo período de ${previous.toLowerCase()}, com ${amount(periodMediaDiff)}% ${periodMediaDiff<=0?'menos':'mais'} investimento em mídia. O ROAS passou de ${previousPeriodRoas.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})} para ${currentPeriodRoas.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}, uma melhora de ${amount(periodRoasDiff)}%. Pedidos: ${amount(periodOrdersDiff)}% ${direction(periodOrdersDiff)}.`;
+  }else{
+    $('readingTitle').textContent=`${current} até ${shortDate(lastMatched)}`;
+    $('readingText').textContent=`Ainda não existem dados diários suficientes de ${previous.toLowerCase()} para comparar o mesmo período. A projeção abaixo usa o ritmo atual e o fechamento mensal disponível como referência.`;
+  }
 }
 function replaceMonthWords(node,current,previous){if(!node)return;const walker=document.createTreeWalker(node,NodeFilter.SHOW_TEXT);let text;while(text=walker.nextNode())text.nodeValue=text.nodeValue.replace(/Agosto/g,current).replace(/agosto/g,current.toLowerCase()).replace(/Julho/g,previous).replace(/julho/g,previous.toLowerCase())}
 function applyMonthCopy(){const current=monthName(selectedMonth).split('/')[0],previous=monthName(previousMonthKey(selectedMonth)).split('/')[0],closed=selectedMonth<currentMonthKey();$('comparisonTitle').textContent=`${current} x ${previous}`;document.querySelector('.badge').textContent=closed?'Mês fechado':'Tempo real';[$('heroTitle'),$('heroText'),$('readingTitle'),$('readingText'),$('revenueCompare'),$('ordersCompare'),$('mediaCompare')].forEach(n=>replaceMonthWords(n,current,previous));if(closed){const all=rows(),sales=all.reduce((a,r)=>a+r.sales,0),media=all.reduce((a,r)=>a+r.media,0),baseM=num(config.base_spend),saving=baseM-media;document.querySelector('.metrics .metric:nth-child(5) small').textContent='Faturamento final';document.querySelector('.metrics .metric:nth-child(6) small').textContent='Mídia final';document.querySelector('.metrics .metric:nth-child(7) small').textContent='Diferença de mídia';$('salesProjection').textContent=compact(sales);$('mediaProjection').textContent=brl(media);$('salesProjectionBasis').textContent='Fechamento consolidado';$('mediaProjectionBasis').textContent='Fechamento consolidado';$('saving').textContent=(saving>=0?'+ ':'- ')+brl(Math.abs(saving))}else{document.querySelector('.metrics .metric:nth-child(5) small').textContent='Projeção de faturamento';document.querySelector('.metrics .metric:nth-child(6) small').textContent='Projeção de mídia';document.querySelector('.metrics .metric:nth-child(7) small').textContent='Economia projetada'}}
