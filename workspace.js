@@ -2,7 +2,7 @@
   const storageKey='moises-workspace';
   const safeStorage={get(){try{return localStorage.getItem(storageKey)}catch(e){return null}},set(value){try{localStorage.setItem(storageKey,value)}catch(e){}}};
   function workspaceOf(member){return member?.moises_workspaces||member?.workspace||null}
-  function routeFor(role){return role==='admin'?'painel.html?v=20260915-compact2':role==='traffic_manager'?'gestor.html':'apresentacao.html'}
+  function routeFor(role){return role==='admin'?'painel.html?v=20260915-exact2':role==='traffic_manager'?'gestor.html':'apresentacao.html'}
   async function memberships(db,userId){
     const {data,error}=await db.from('moises_workspace_members').select('workspace_id,role,moises_workspaces(id,name,slug,brand_name,accent_color,secondary_color,description,is_active)').eq('user_id',userId);
     if(error)throw error;
@@ -25,7 +25,7 @@
     document.querySelectorAll('[data-workspace-brand]').forEach(n=>n.textContent=workspace.brand_name||workspace.name);
     document.querySelectorAll('[data-workspace-name]').forEach(n=>n.textContent=workspace.name||workspace.brand_name);
   }
-  function workspaceUrl(path,id){const url=new URL(path,location.href);url.searchParams.set('workspace',id);return url.pathname.split('/').pop()+url.search}
+  function workspaceUrl(path,id){const url=new URL(path,location.href);url.searchParams.set('workspace',id);if(url.pathname.endsWith('/painel.html'))url.searchParams.set('v','20260915-exact2');return url.pathname.split('/').pop()+url.search}
   function wireSelector(node,items,current){
     if(!node)return;
     node.innerHTML=items.map(m=>{const w=workspaceOf(m);return `<option value="${m.workspace_id}">${w?.brand_name||w?.name||'Operação'}</option>`}).join('');
