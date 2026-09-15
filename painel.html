@@ -358,6 +358,11 @@ body.compact-admin .chapter-index a:nth-child(n+9){display:none}
 }
 </style>
 <style>/* hidden-sections-safety */ [hidden]{display:none!important}</style>
+<style>/* sales-delete-control-v1 */
+.delete-record{border:1px solid #e1a8b8;border-radius:9px;padding:6px 9px;background:transparent;color:#a72f59;font:800 10px/1 Inter,system-ui,sans-serif;cursor:pointer}
+.delete-record:hover{background:#fff1f5}
+.dark .delete-record{border-color:#a75a72;color:#ffc0d1}
+</style>
 </head>
 <body class="auth-pending compact-admin">
 
@@ -591,7 +596,7 @@ body.compact-admin .chapter-index a:nth-child(n+9){display:none}
       </div></div>
     </div>
     <div style="margin-top:18px;max-height:180px;overflow:auto;border:1px solid var(--line);border-radius:18px;background:#fff">
-      <table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="padding:10px;text-align:left;color:var(--muted)">Data</th><th style="padding:10px;text-align:left;color:var(--muted)">Venda</th><th style="padding:10px;text-align:left;color:var(--muted)">Pedidos</th><th style="padding:10px;text-align:left;color:var(--muted)">Acumulado</th></tr></thead><tbody id="salesHistory"></tbody></table>
+      <table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="padding:10px;text-align:left;color:var(--muted)">Data</th><th style="padding:10px;text-align:left;color:var(--muted)">Venda</th><th style="padding:10px;text-align:left;color:var(--muted)">Pedidos</th><th style="padding:10px;text-align:left;color:var(--muted)">Acumulado</th><th style="padding:10px;text-align:left;color:var(--muted)">Ação</th></tr></thead><tbody id="salesHistory"></tbody></table>
     </div>
   </div>
 </section>
@@ -1004,6 +1009,13 @@ function subscribeRealtime(){
 }
 function fillDailySale(){const r=allDailyRecords.find(x=>x.date===el('salesDate').value);el('salesValue').value=r?.sales||'';el('salesOrders').value=r?.orders??''}
 el('salesDate').addEventListener('change',fillDailySale);
+async function deleteDailySale(recordDate){
+ if(!currentWorkspaceId||!recordDate)return;
+ if(!confirm('Excluir o registro de vendas deste dia? Esta ação não altera o gasto de mídia.'))return;
+ const {error}=await db.from('moises_commercial_daily').delete().eq('workspace_id',currentWorkspaceId).eq('record_date',recordDate);
+ if(error){alert('Não foi possível excluir o registro: '+error.message);return}
+ if(await loadCloudData()){renderDaily();showSync('Registro de vendas excluído')}
+}
 async function saveDailySale(){const d=el('salesDate').value,v=+el('salesValue').value,o=Number(el('salesOrders').value);if(!d||!v)return alert('Informe data e venda.');if(!Number.isInteger(o)||o<0)return alert('Informe o número de pedidos com um valor inteiro.');if(await upsertDaily(d,{sales:v,orders:o})){renderDaily();showSync('Venda e pedidos sincronizados')}}
 async function saveDailyMedia(){const d=el('mediaDate').value,v=+el('mediaValue').value;if(!d||!v)return alert('Informe data e gasto.');if(await upsertDaily(d,{media:v})){el('mediaValue').value='';renderDaily()}}
 function operatingDaysForCurrentMonth(){
@@ -1022,7 +1034,7 @@ function renderDaily(){
  const validMargin=margin>0,saving=base.spend-budget,maxLoss=validMargin?saving/(margin/100):0,minMonthly=validMargin?base.revenue-maxLoss:base.revenue,targetDaily=base.revenue/salesProjectionDays,minDaily=minMonthly/salesProjectionDays,proj=sD?sA*salesProjectionDays:0,rem=Math.max(salesProjectionDays-sD,0),need=rem?Math.max((base.revenue-sT)/rem,0):0;
  document.getElementById('salesAccum').textContent=brl(sT);document.getElementById('salesDaysCount').textContent=sD+' dias registrados';document.getElementById('salesAvg').textContent=brl(sA);document.getElementById('salesTargetDaily').textContent=brl(targetDaily);document.getElementById('salesMinDaily').textContent=validMargin?brl(minDaily):'Defina a margem';document.getElementById('salesProjection').textContent=compact(proj);document.getElementById('salesProjectionText').textContent=sD?`projeção em ${salesProjectionDays} dias de venda, sem domingos`:'sem dados suficientes';document.getElementById('salesNeededRest').textContent=brl(need);
  const sb=document.getElementById('salesStatusBox');if(!validMargin){document.getElementById('salesStatus').textContent='Margem pendente';document.getElementById('salesStatusText').textContent='Informe a margem de contribuição para calcular o mínimo econômico.';sb.style.background='#fff8ec'}else if(!sD){document.getElementById('salesStatus').textContent='Aguardando dados';document.getElementById('salesStatusText').textContent='Registre as vendas diárias.';sb.style.background=''}else if(proj>=base.revenue){document.getElementById('salesStatus').textContent='Acima da meta';document.getElementById('salesStatusText').textContent='O ritmo atual projeta manutenção ou crescimento do faturamento.';sb.style.background='#f1fff7'}else if(proj>=minMonthly){document.getElementById('salesStatus').textContent='Zona segura';document.getElementById('salesStatusText').textContent='A projeção está abaixo da meta, mas acima do limite econômico.';sb.style.background='#fff8ec'}else{document.getElementById('salesStatus').textContent='Abaixo do mínimo';document.getElementById('salesStatusText').textContent='No ritmo atual, o corte pode não compensar.';sb.style.background='#fff3f7'}
- let ac=0;document.getElementById('salesHistory').innerHTML=sales.map(x=>{ac+=x.value;const orders=dailyRecords.find(r=>r.date===x.date)?.orders||0;return `<tr><td style="padding:10px">${x.date.split('-').reverse().join('/')}</td><td style="padding:10px">${brl(x.value)}</td><td style="padding:10px">${orders.toLocaleString('pt-BR')}</td><td style="padding:10px">${brl(ac)}</td></tr>`}).reverse().join('');
+ let ac=0;document.getElementById('salesHistory').innerHTML=sales.map(x=>{ac+=x.value;const orders=dailyRecords.find(r=>r.date===x.date)?.orders||0;return `<tr><td style="padding:10px">${x.date.split('-').reverse().join('/')}</td><td style="padding:10px">${brl(x.value)}</td><td style="padding:10px">${orders.toLocaleString('pt-BR')}</td><td style="padding:10px">${brl(ac)}</td><td style="padding:10px"><button class="delete-record" type="button" onclick="deleteDailySale(\'${x.date}\')">Excluir</button></td></tr>`}).reverse().join('');
  document.getElementById('mediaAccum').textContent=brl(mT);document.getElementById('mediaDaysCount').textContent=mD+' dias registrados';document.getElementById('mediaAvg').textContent=brl(mA);document.getElementById('mediaDailyTarget').textContent=brl(budget/mediaProjectionDays);document.getElementById('mediaRemaining').textContent=brl(Math.max(budget-mT,0));document.getElementById('mediaRoas').textContent=mT?(sT/mT).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'x':'—';const mp=mD?mA*mediaProjectionDays:0;document.getElementById('mediaProjection').textContent=brl(mp);document.getElementById('mediaProjectionText').textContent=mD?`projeção em ${mediaProjectionDays} dias de campanha, incluindo domingos`:'sem dados suficientes';
  if(!mD){document.getElementById('mediaStatus').textContent='Aguardando dados';document.getElementById('mediaStatusText').textContent='Registre o gasto diário.'}else if(mp<=budget){document.getElementById('mediaStatus').textContent='Dentro do orçamento';document.getElementById('mediaStatusText').textContent='A projeção está dentro do cenário selecionado.'}else{document.getElementById('mediaStatus').textContent='Acima do orçamento';document.getElementById('mediaStatusText').textContent='No ritmo atual, a mídia deve ultrapassar o orçamento escolhido.'}
  const sm=Object.fromEntries(sales.map(x=>[x.date,x.value]));document.getElementById('mediaHistory').innerHTML=media.map(x=>{const sv=sm[x.date]||0,r=sv&&x.value?sv/x.value:0;return `<tr><td style="padding:10px">${x.date.split('-').reverse().join('/')}</td><td style="padding:10px">${brl(x.value)}</td><td style="padding:10px">${sv?brl(sv):'—'}</td><td style="padding:10px">${r?r.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'x':'—'}</td></tr>`}).reverse().join('')
