@@ -104,6 +104,64 @@ html[data-workspace="beira-rio"][data-theme="dark"] .theme-toggle,
 html[data-workspace="beira-rio"][data-theme="dark"] .month-control{
   background:#102a32!important;color:#d7f4f6!important;border-color:#315560!important;
 }
+
+html[data-workspace="floripa"]{
+  --ink:#17352f;--muted:#667e79;--pink:#23a36d;--purple:#11607a;--line:#cfe5dc;
+}
+html[data-workspace="floripa"] body{
+  background:radial-gradient(circle at 90% 0,#dff5ea,transparent 28%),linear-gradient(145deg,#fff,#f3fbf8);
+}
+html[data-workspace="floripa"] body:before{background:radial-gradient(circle,#a9e5cb,transparent 68%)}
+html[data-workspace="floripa"] body:after{background:radial-gradient(circle,#a9d8e3,transparent 68%)}
+html[data-workspace="floripa"] .brand h1{
+  background-image:linear-gradient(110deg,var(--ink),#178b61,#2489a0);
+}
+html[data-workspace="floripa"] .hero{
+  background:linear-gradient(125deg,#32ad76,#187d79 60%,#11546e);
+  box-shadow:0 24px 70px #11607a30;
+}
+html[data-workspace="floripa"] .metric strong,
+html[data-workspace="floripa"] .mini strong{color:#176c58}
+html[data-workspace="floripa"] .presentation-button{
+  background:linear-gradient(110deg,#2aa971,#11607a);
+}
+html[data-workspace="floripa"] .presentation{background:#071713}
+html[data-workspace="floripa"] .presentation-bg{
+  background:radial-gradient(circle at 76% 20%,#2cab775c,transparent 31%),radial-gradient(circle at 15% 83%,#217d9142,transparent 28%),linear-gradient(145deg,#061510,#0c302b 57%,#08222a);
+}
+html[data-workspace="floripa"][data-theme="dark"]{
+  --ink:#f2fcf8;--muted:#aac7bd;--pink:#4bce91;--purple:#3ca1b5;--line:#294f49;
+}
+html[data-workspace="floripa"][data-theme="dark"] body{
+  background:radial-gradient(circle at 92% 0,#145b57 0,transparent 32%),radial-gradient(circle at 4% 74%,#0d4138 0,transparent 30%),linear-gradient(145deg,#061511,#102923 55%,#081c20);
+}
+html[data-workspace="floripa"][data-theme="dark"] body:before{background:radial-gradient(circle,#238b64,transparent 68%)}
+html[data-workspace="floripa"][data-theme="dark"] body:after{background:radial-gradient(circle,#236c7a,transparent 68%)}
+html[data-workspace="floripa"][data-theme="dark"] .brand h1{
+  background-image:linear-gradient(110deg,#fff,#a9ead0,#67cad9);
+}
+html[data-workspace="floripa"][data-theme="dark"] .metric,
+html[data-workspace="floripa"][data-theme="dark"] .card{
+  background:#102a25dd;border-color:#294f49;box-shadow:0 18px 48px #0005;
+}
+html[data-workspace="floripa"][data-theme="dark"] .metric:hover,
+html[data-workspace="floripa"][data-theme="dark"] .card:hover{
+  border-color:#397d70;box-shadow:0 26px 65px #0007;
+}
+html[data-workspace="floripa"][data-theme="dark"] .metric strong,
+html[data-workspace="floripa"][data-theme="dark"] .mini strong{color:#a4e8cf}
+html[data-workspace="floripa"][data-theme="dark"] .mini{background:#15372f;border-color:#315d55}
+html[data-workspace="floripa"][data-theme="dark"] .next-step{background:#0f2b25;border-color:#294f49}
+html[data-workspace="floripa"][data-theme="dark"] .chart{border-color:#294f49}
+html[data-workspace="floripa"][data-theme="dark"] .insight{
+  background:linear-gradient(145deg,#15372f,#102b26);border-color:#294f49;
+}
+html[data-workspace="floripa"][data-theme="dark"] .summary-section-title{color:#91dfc3}
+html[data-workspace="floripa"][data-theme="dark"] .actions a,
+html[data-workspace="floripa"][data-theme="dark"] .theme-toggle,
+html[data-workspace="floripa"][data-theme="dark"] .month-control{
+  background:#102e29!important;color:#dcf7ed!important;border-color:#315d55!important;
+}
 `;
     document.head.appendChild(style);
   }
