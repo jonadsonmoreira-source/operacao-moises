@@ -2,7 +2,7 @@
   const storageKey='moises-workspace';
   const safeStorage={get(){try{return localStorage.getItem(storageKey)}catch(e){return null}},set(value){try{localStorage.setItem(storageKey,value)}catch(e){}}};
   function workspaceOf(member){return member?.moises_workspaces||member?.workspace||null}
-  function routeFor(role){return role==='admin'?'painel.html':role==='traffic_manager'?'gestor.html':'apresentacao.html'}
+  function routeFor(role){return role==='admin'?'painel.html?v=20260915-compact2':role==='traffic_manager'?'gestor.html':'apresentacao.html'}
   async function memberships(db,userId){
     const {data,error}=await db.from('moises_workspace_members').select('workspace_id,role,moises_workspaces(id,name,slug,brand_name,accent_color,secondary_color,description,is_active)').eq('user_id',userId);
     if(error)throw error;
