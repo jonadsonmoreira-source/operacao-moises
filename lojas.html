@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">\n<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <title>Operação Moisés — Escolher loja</title>
   <style>
     :root{--ink:#f7f1fa;--muted:#b9aabd;--line:#ffffff17;--panel:#211528;--bg:#110b16}
@@ -25,7 +25,7 @@
       let memberships=[];try{memberships=await MoisesWorkspace.memberships(db,session.user.id)}catch(e){}
       if(!memberships.length){await db.auth.signOut();location.replace('./index.html');return}
       document.getElementById('account').textContent=session.user.email;
-      document.getElementById('stores').innerHTML=memberships.map((m,i)=>{const w=MoisesWorkspace.workspaceOf(m),id=encodeURIComponent(m.workspace_id),accent=esc(w.accent_color||'#f4589b'),secondary=esc(w.secondary_color||'#6d2ccf'),main=MoisesWorkspace.routeFor(m.role),strategy=w.slug==='porto'?`<a href="./estrategia.html?workspace=${id}">Apresentação inicial</a>`:'';return `<article class="store" style="--accent:${accent};--secondary:${secondary}"><div class="store-number">Operação ${String(i+1).padStart(2,'0')}</div><h2>${esc(w.brand_name||w.name)}</h2><p>${esc(w.description||'Painel de desempenho e estratégia da operação.')}</p><span class="status">Projeto independente</span><div class="buttons"><a class="primary" href="./${main}?workspace=${id}">Abrir painel</a>${m.role!=='traffic_manager'?`<a href="./apresentacao.html?workspace=${id}">Visão executiva</a>`:''}${strategy}</div></article>`}).join('');
+      document.getElementById('stores').innerHTML=memberships.map((m,i)=>{const w=MoisesWorkspace.workspaceOf(m),id=encodeURIComponent(m.workspace_id),accent=esc(w.accent_color||'#f4589b'),secondary=esc(w.secondary_color||'#6d2ccf'),main=MoisesWorkspace.routeFor(m.role),mainUrl=MoisesWorkspace.workspaceUrl('./'+main,m.workspace_id),strategy=w.slug==='porto'?`<a href="./estrategia.html?workspace=${id}">Apresentação inicial</a>`:'';return `<article class="store" style="--accent:${accent};--secondary:${secondary}"><div class="store-number">Operação ${String(i+1).padStart(2,'0')}</div><h2>${esc(w.brand_name||w.name)}</h2><p>${esc(w.description||'Painel de desempenho e estratégia da operação.')}</p><span class="status">Projeto independente</span><div class="buttons"><a class="primary" href="${mainUrl}">Abrir painel</a>${m.role!=='traffic_manager'?`<a href="./apresentacao.html?workspace=${id}">Visão executiva</a>`:''}${strategy}</div></article>`}).join('');
       document.body.classList.remove('auth-pending');
     }
     document.getElementById('logout').onclick=async()=>{await db.auth.signOut();location.replace('./index.html')};db.auth.onAuthStateChange((e,s)=>{if(e==='SIGNED_OUT'||!s)location.replace('./index.html')});boot();
