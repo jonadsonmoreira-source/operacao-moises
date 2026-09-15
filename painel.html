@@ -1065,7 +1065,7 @@ async function boot(){
   subscribeRealtime();
 }
 boot();
-const chapters=[...document.querySelectorAll('.chapter')];
+const chapters=[...document.querySelectorAll('.chapter')].filter(chapter=>getComputedStyle(chapter).display!=='none');
 const dots=[...document.querySelectorAll('.chapter-index a')];
 if('IntersectionObserver' in window){
   const obs=new IntersectionObserver(entries=>{
