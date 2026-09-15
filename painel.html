@@ -326,8 +326,39 @@ select{
   .metric{padding:11px}.metric strong{font-size:19px}
   .result-grid{grid-template-columns:1fr}
 }
-</style><style>@media(max-width:700px){body{padding-bottom:190px}.account-bar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));bottom:7px}.account-bar .month-control{grid-column:1/-1;justify-content:center}.account-bar a,.account-bar button{width:100%}.sync-state{bottom:182px}}</style><link rel="stylesheet" href="./workspace.css"></head>
-<body class="auth-pending">
+</style><style>@media(max-width:700px){body{padding-bottom:190px}.account-bar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));bottom:7px}.account-bar .month-control{grid-column:1/-1;justify-content:center}.account-bar a,.account-bar button{width:100%}.sync-state{bottom:182px}}</style><link rel="stylesheet" href="./workspace.css">
+<style>
+/* painel-operacional-enxuto-v1 */
+body.compact-admin{scroll-snap-type:none}
+body.compact-admin #c1,
+body.compact-admin #c2,
+body.compact-admin #c3,
+body.compact-admin #c4,
+body.compact-admin #c9,
+body.compact-admin #monday,
+body.compact-admin #c10{display:none}
+body.compact-admin .chapter{min-height:auto;scroll-snap-align:none;padding:74px 24px}
+body.compact-admin #c5{padding-top:120px}
+body.compact-admin #c8{padding-bottom:110px}
+body.compact-admin #c6 .result-grid>.result:nth-child(n+3){display:none}
+body.compact-admin #c7 .result-grid>.result{display:none}
+body.compact-admin #c7 .result-grid>.result:nth-child(1),
+body.compact-admin #c7 .result-grid>.result:nth-child(2),
+body.compact-admin #c7 .result-grid>.result:nth-child(5){display:block}
+body.compact-admin #c6 .result-grid,
+body.compact-admin #c7 .result-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+body.compact-admin #c6 .result-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+body.compact-admin .chapter-index a:nth-child(-n+4),
+body.compact-admin .chapter-index a:nth-child(n+9){display:none}
+@media(max-width:760px){
+ body.compact-admin .chapter{padding:58px 14px}
+ body.compact-admin #c5{padding-top:150px}
+ body.compact-admin #c6 .result-grid,
+ body.compact-admin #c7 .result-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body class="auth-pending compact-admin">
 
 <div class="account-bar"><span id="accountEmail"></span><label class="workspace-control">Loja<select id="workspaceSelector" aria-label="Selecionar loja"></select></label><label class="month-control">Período<select id="monthSelector" aria-label="Selecionar mês"></select></label><a href="./lojas.html">Todas as lojas</a><a data-workspace-link href="./apresentacao.html">Visão executiva</a><a data-workspace-link href="./gestor.html">Painel do tráfego</a><button class="invite-button" id="inviteButton" type="button">Gerenciar acessos</button><button id="logoutButton" type="button">Sair</button></div>
 <div class="sync-state" id="syncState">Sincronizando…</div>
@@ -345,9 +376,8 @@ select{
   </div>
 </div>
 
-<nav class="chapter-index">
-  <a href="#c1"></a><a href="#c2"></a><a href="#c3"></a><a href="#c4"></a>
-  <a href="#c5"></a><a href="#c6"></a><a href="#c7"></a><a href="#c8"></a><a href="#c9"></a><a href="#monday"></a><a href="#c10"></a>
+<nav class="chapter-index" aria-label="Ferramentas do painel">
+  <a href="#c5" title="Calculadora"></a><a href="#c6" title="Vendas"></a><a href="#c7" title="Mídia"></a><a href="#c8" title="Análise automática"></a>
 </nav>
 
 <section id="c1" class="chapter hero">
@@ -421,8 +451,8 @@ select{
 
 <section id="c5" class="chapter light">
   <div class="inner reveal">
-    <div class="kicker">Capítulo 04 — Simulação</div>
-    <h2>Calculadora<br>de eficiência</h2>
+    <div class="kicker">Ferramenta 01 — Planejamento</div>
+    <h2>Calculadora<br>de metas e eficiência</h2>
     <p class="lead">Agora a conta separa o que é orçamento, o que é resultado comercial e o que realmente pode virar ganho financeiro.</p>
 
     <div class="calc">
@@ -539,9 +569,9 @@ select{
 
 <section id="c6" class="chapter soft">
   <div class="inner reveal">
-    <div class="kicker">Capítulo 05 — Vendas diárias</div>
-    <h2>Atualize uma vez.<br>O painel calcula o resto.</h2>
-    <p class="lead">Registre a venda do dia anterior. O histórico fica salvo neste navegador e o painel calcula ritmo, projeção e meta restante.</p>
+    <div class="kicker">Ferramenta 02 — Vendas</div>
+    <h2>Registro diário<br>de vendas</h2>
+    <p class="lead">Registre a venda do dia anterior. O histórico fica salvo somente nesta loja e alimenta automaticamente a análise de performance.</p>
     <div class="calc">
       <div class="controls">
         <div class="control"><div class="top"><label>Data</label><b>Venda diária</b></div><input id="salesDate" type="date" style="width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink)"></div>
@@ -567,8 +597,8 @@ select{
 
 <section id="c7" class="chapter dark">
   <div class="inner reveal">
-    <div class="kicker">Capítulo 06 — Mídia diária</div>
-    <h2>Quanto estamos<br>gastando para vender?</h2>
+    <div class="kicker">Ferramenta 03 — Anúncios</div>
+    <h2>Registro diário<br>de mídia</h2>
     <p class="lead">Registre o gasto real do dia anterior. O painel cruza mídia e vendas automaticamente.</p>
     <div class="calc">
       <div class="controls">
@@ -600,7 +630,7 @@ select{
 <section id="c8" class="chapter light">
   <div class="inner reveal">
     <div class="summary-head">
-      <div><div class="kicker">Capítulo 07 — Resumo geral</div><h2>Como está<br>o mês agora?</h2></div>
+      <div><div class="kicker">Ferramenta 04 — Inteligência</div><h2>Análise automática<br>de performance</h2></div>
       <div class="summary-badge" id="summaryConfidence">Aguardando dados</div>
     </div>
     <div class="summary-grid">
