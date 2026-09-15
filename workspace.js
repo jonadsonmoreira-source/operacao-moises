@@ -20,7 +20,8 @@
     if(!workspace)return;
     const root=document.documentElement,accent=workspace.accent_color||'#f4589b',secondary=workspace.secondary_color||'#6d2ccf';
     root.style.setProperty('--brand-accent',accent);root.style.setProperty('--brand-secondary',secondary);root.style.setProperty('--pink',accent);root.style.setProperty('--purple',secondary);
-    root.dataset.workspace=workspace.slug||'';\n    ensureWorkspaceTheme();
+    root.dataset.workspace=workspace.slug||'';
+    ensureWorkspaceTheme();
     document.querySelectorAll('[data-workspace-brand]').forEach(n=>n.textContent=workspace.brand_name||workspace.name);
     document.querySelectorAll('[data-workspace-name]').forEach(n=>n.textContent=workspace.name||workspace.brand_name);
   }
