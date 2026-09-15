@@ -17,7 +17,8 @@
     /* ecosystem-motion-v1 */
     .enter{opacity:0;transform:translateY(26px);animation:none}
     body.motion-ready .ecosystem.enter{animation:ecosystemIn .9s cubic-bezier(.16,1,.3,1) both}
-    body.motion-ready .store.enter{animation:storeIn .78s cubic-bezier(.16,1,.3,1) both;animation-delay:var(--delay,0ms)}
+    body.motion-ready .store.enter{opacity:0;transform:translateY(38px) scale(.965);filter:blur(7px)}
+    body.motion-ready .store.enter.is-visible{animation:storeIn .82s cubic-bezier(.16,1,.3,1) both;animation-delay:var(--reveal-delay,0ms)}
     .branches{opacity:0;transform:translateX(-50%) scaleY(0);transform-origin:top center}
     body.motion-ready .branches{animation:branchesIn .8s .48s cubic-bezier(.16,1,.3,1) forwards}
     .section-label{opacity:0;transform:translateY(8px)}
@@ -31,10 +32,10 @@
     .page-transition.active{opacity:1}.page-transition.active:before{transform:translate(-50%,-50%) scale(120)}
     body.is-leaving .shell{opacity:.35;transform:scale(.985);transition:opacity .35s ease,transform .35s ease}
     @keyframes ecosystemIn{from{opacity:0;transform:translateY(34px) scale(.975);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}
-    @keyframes storeIn{from{opacity:0;transform:translateY(32px) scale(.97)}to{opacity:1;transform:none}}
+    @keyframes storeIn{0%{opacity:0;transform:translateY(38px) scale(.965);filter:blur(7px)}65%{filter:blur(0)}100%{opacity:1;transform:none;filter:none}}
     @keyframes branchesIn{0%{opacity:0;transform:translateX(-50%) scaleY(0)}30%{opacity:1}100%{opacity:1;transform:translateX(-50%) scaleY(1)}}
     @keyframes labelIn{to{opacity:1;transform:none}}
-    @media(max-width:520px){.branches{display:none}.group-card:after{display:none}.page-transition:before{transition-duration:.38s}}
+    @media(max-width:520px){.branches{display:none}.group-card:after{display:none}.page-transition:before{transition-duration:.38s}body.motion-ready .store.enter.is-visible{animation-duration:.72s;animation-delay:0ms}}
     @media(prefers-reduced-motion:reduce){.enter,.section-label,.branches{opacity:1!important;transform:none!important;animation:none!important}.page-transition{display:none}.group-card:after{display:none}}
   </style>
 </head>
@@ -60,9 +61,10 @@
       let memberships=[];try{memberships=await MoisesWorkspace.memberships(db,session.user.id)}catch(e){}
       if(!memberships.length){await db.auth.signOut();location.replace('./index.html');return}
       document.getElementById('account').textContent=session.user.email;
-      document.getElementById('stores').innerHTML=memberships.map((m,i)=>{const w=MoisesWorkspace.workspaceOf(m),id=encodeURIComponent(m.workspace_id),accent=esc(w.accent_color||'#f4589b'),secondary=esc(w.secondary_color||'#6d2ccf'),main=MoisesWorkspace.routeFor(m.role),mainUrl=MoisesWorkspace.workspaceUrl('./'+main,m.workspace_id),strategy=w.slug==='porto'?`<a href="./estrategia.html?workspace=${id}">Apresentação inicial</a>`:'';return `<article class="store enter" style="--accent:${accent};--secondary:${secondary};--delay:${720+i*105}ms"><div class="store-number">Operação ${String(i+1).padStart(2,'0')}</div><h2>${esc(w.brand_name||w.name)}</h2><p>${esc(w.description||'Painel de desempenho e estratégia da operação.')}</p><span class="status">Operação independente</span><div class="buttons"><a class="primary" href="${mainUrl}">Abrir painel</a>${m.role!=='traffic_manager'?`<a href="./apresentacao.html?workspace=${id}">Visão executiva</a>`:''}${strategy}</div></article>`}).join('');
-      document.body.classList.remove('auth-pending');requestAnimationFrame(()=>document.body.classList.add('motion-ready'));wireTransitions();initSpotlight();
+      document.getElementById('stores').innerHTML=memberships.map((m,i)=>{const w=MoisesWorkspace.workspaceOf(m),id=encodeURIComponent(m.workspace_id),accent=esc(w.accent_color||'#f4589b'),secondary=esc(w.secondary_color||'#6d2ccf'),main=MoisesWorkspace.routeFor(m.role),mainUrl=MoisesWorkspace.workspaceUrl('./'+main,m.workspace_id),strategy=w.slug==='porto'?`<a href="./estrategia.html?workspace=${id}">Apresentação inicial</a>`:'';return `<article class="store enter" style="--accent:${accent};--secondary:${secondary};--reveal-delay:${(i%2)*105}ms"><div class="store-number">Operação ${String(i+1).padStart(2,'0')}</div><h2>${esc(w.brand_name||w.name)}</h2><p>${esc(w.description||'Painel de desempenho e estratégia da operação.')}</p><span class="status">Operação independente</span><div class="buttons"><a class="primary" href="${mainUrl}">Abrir painel</a>${m.role!=='traffic_manager'?`<a href="./apresentacao.html?workspace=${id}">Visão executiva</a>`:''}${strategy}</div></article>`}).join('');
+      document.body.classList.remove('auth-pending');requestAnimationFrame(()=>{document.body.classList.add('motion-ready');initScrollReveal()});wireTransitions();initSpotlight();
     }
+    function initScrollReveal(){const cards=[...document.querySelectorAll('.store.enter')];if(matchMedia('(prefers-reduced-motion:reduce)').matches){cards.forEach(card=>card.classList.add('is-visible'));return}const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('is-visible');observer.unobserve(entry.target)}}),{threshold:.14,rootMargin:'0px 0px -8%'});cards.forEach(card=>observer.observe(card))}
     function initSpotlight(){if(matchMedia('(pointer:fine)').matches){const card=document.querySelector('.group-card');card?.addEventListener('pointermove',e=>{const r=card.getBoundingClientRect();card.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');card.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%')})}}
     function wireTransitions(){const reduced=matchMedia('(prefers-reduced-motion:reduce)').matches,layer=document.getElementById('pageTransition');document.querySelectorAll('.group-button,.buttons a').forEach(link=>link.addEventListener('click',e=>{if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||link.target==='_blank')return;if(reduced)return;e.preventDefault();const rect=link.getBoundingClientRect(),store=link.closest('.store'),color=store?getComputedStyle(store).getPropertyValue('--accent').trim():'#8c3fd1';layer.style.setProperty('--tx',(rect.left+rect.width/2)+'px');layer.style.setProperty('--ty',(rect.top+rect.height/2)+'px');layer.style.setProperty('--transition-color',color);layer.classList.add('active');document.body.classList.add('is-leaving');setTimeout(()=>location.href=link.href,420)}))}
     document.getElementById('logout').onclick=async()=>{await db.auth.signOut();location.replace('./index.html')};db.auth.onAuthStateChange((e,s)=>{if(e==='SIGNED_OUT'||!s)location.replace('./index.html')});boot();
