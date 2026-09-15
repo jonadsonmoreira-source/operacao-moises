@@ -13,8 +13,33 @@
     @media(max-width:900px){.group-head{flex-direction:column}.signature{text-align:left}.group-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.group-metric:last-child{grid-column:1/-1}.branches{width:62%}}
     @media(max-width:520px){.top{align-items:stretch;flex-direction:column;margin-bottom:22px}.actions button{width:100%}.ecosystem{margin-bottom:34px}.group-card{padding:24px 20px;border-radius:26px}.group-card h2{font-size:clamp(36px,13vw,54px)}.group-metrics{gap:7px;margin-top:25px}.group-metric{padding:12px}.group-metric strong{font-size:19px}.signature{width:100%}.branches{display:none}.store{min-height:0;padding:22px}.store h2{font-size:clamp(29px,10vw,40px)}.store-metrics{margin-bottom:22px}.buttons{position:static;margin-top:24px}.buttons a{flex:1}.foot{overflow-wrap:anywhere}}
   </style>
+  <style>
+    /* ecosystem-motion-v1 */
+    .enter{opacity:0;transform:translateY(26px);animation:none}
+    body.motion-ready .ecosystem.enter{animation:ecosystemIn .9s cubic-bezier(.16,1,.3,1) both}
+    body.motion-ready .store.enter{animation:storeIn .78s cubic-bezier(.16,1,.3,1) both;animation-delay:var(--delay,0ms)}
+    .branches{opacity:0;transform:translateX(-50%) scaleY(0);transform-origin:top center}
+    body.motion-ready .branches{animation:branchesIn .8s .48s cubic-bezier(.16,1,.3,1) forwards}
+    .section-label{opacity:0;transform:translateY(8px)}
+    body.motion-ready .section-label{animation:labelIn .5s .65s ease forwards}
+    .group-card:after{content:"";position:absolute;inset:-1px;z-index:-1;pointer-events:none;background:radial-gradient(440px circle at var(--mx,78%) var(--my,20%),#ffffff16,transparent 45%);opacity:.8;transition:opacity .35s ease}
+    .group-button,.buttons a{transition:transform .28s ease,box-shadow .28s ease,background .28s ease}
+    .group-button:hover,.buttons a:hover{transform:translateY(-2px)}
+    .group-button:hover{box-shadow:0 18px 42px #b3378266}
+    .page-transition{position:fixed;inset:0;z-index:200;pointer-events:none;overflow:hidden;opacity:0}
+    .page-transition:before{content:"";position:absolute;left:var(--tx,50%);top:var(--ty,50%);width:24px;height:24px;border-radius:50%;background:var(--transition-color,#8c3fd1);transform:translate(-50%,-50%) scale(0);transition:transform .52s cubic-bezier(.7,0,.2,1)}
+    .page-transition.active{opacity:1}.page-transition.active:before{transform:translate(-50%,-50%) scale(120)}
+    body.is-leaving .shell{opacity:.35;transform:scale(.985);transition:opacity .35s ease,transform .35s ease}
+    @keyframes ecosystemIn{from{opacity:0;transform:translateY(34px) scale(.975);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}
+    @keyframes storeIn{from{opacity:0;transform:translateY(32px) scale(.97)}to{opacity:1;transform:none}}
+    @keyframes branchesIn{0%{opacity:0;transform:translateX(-50%) scaleY(0)}30%{opacity:1}100%{opacity:1;transform:translateX(-50%) scaleY(1)}}
+    @keyframes labelIn{to{opacity:1;transform:none}}
+    @media(max-width:520px){.branches{display:none}.group-card:after{display:none}.page-transition:before{transition-duration:.38s}}
+    @media(prefers-reduced-motion:reduce){.enter,.section-label,.branches{opacity:1!important;transform:none!important;animation:none!important}.page-transition{display:none}.group-card:after{display:none}}
+  </style>
 </head>
 <body class="auth-pending">
+  <div class="page-transition" id="pageTransition" aria-hidden="true"></div>
   <main class="shell">
     <header class="top"><div class="brand"><small>Ecossistema de gestão</small><h1>Operação Moisés</h1><p>Uma visão central. Operações independentes.</p></div><div class="actions"><button id="logout" type="button">Sair</button></div></header>
     <section class="ecosystem enter">
@@ -35,9 +60,11 @@
       let memberships=[];try{memberships=await MoisesWorkspace.memberships(db,session.user.id)}catch(e){}
       if(!memberships.length){await db.auth.signOut();location.replace('./index.html');return}
       document.getElementById('account').textContent=session.user.email;
-      document.getElementById('stores').innerHTML=memberships.map((m,i)=>{const w=MoisesWorkspace.workspaceOf(m),id=encodeURIComponent(m.workspace_id),accent=esc(w.accent_color||'#f4589b'),secondary=esc(w.secondary_color||'#6d2ccf'),main=MoisesWorkspace.routeFor(m.role),mainUrl=MoisesWorkspace.workspaceUrl('./'+main,m.workspace_id),strategy=w.slug==='porto'?`<a href="./estrategia.html?workspace=${id}">Apresentação inicial</a>`:'';return `<article class="store enter" style="--accent:${accent};--secondary:${secondary};--delay:${120+i*90}ms"><div class="store-number">Operação ${String(i+1).padStart(2,'0')}</div><h2>${esc(w.brand_name||w.name)}</h2><p>${esc(w.description||'Painel de desempenho e estratégia da operação.')}</p><span class="status">Operação independente</span><div class="buttons"><a class="primary" href="${mainUrl}">Abrir painel</a>${m.role!=='traffic_manager'?`<a href="./apresentacao.html?workspace=${id}">Visão executiva</a>`:''}${strategy}</div></article>`}).join('');
-      document.body.classList.remove('auth-pending');
+      document.getElementById('stores').innerHTML=memberships.map((m,i)=>{const w=MoisesWorkspace.workspaceOf(m),id=encodeURIComponent(m.workspace_id),accent=esc(w.accent_color||'#f4589b'),secondary=esc(w.secondary_color||'#6d2ccf'),main=MoisesWorkspace.routeFor(m.role),mainUrl=MoisesWorkspace.workspaceUrl('./'+main,m.workspace_id),strategy=w.slug==='porto'?`<a href="./estrategia.html?workspace=${id}">Apresentação inicial</a>`:'';return `<article class="store enter" style="--accent:${accent};--secondary:${secondary};--delay:${720+i*105}ms"><div class="store-number">Operação ${String(i+1).padStart(2,'0')}</div><h2>${esc(w.brand_name||w.name)}</h2><p>${esc(w.description||'Painel de desempenho e estratégia da operação.')}</p><span class="status">Operação independente</span><div class="buttons"><a class="primary" href="${mainUrl}">Abrir painel</a>${m.role!=='traffic_manager'?`<a href="./apresentacao.html?workspace=${id}">Visão executiva</a>`:''}${strategy}</div></article>`}).join('');
+      document.body.classList.remove('auth-pending');requestAnimationFrame(()=>document.body.classList.add('motion-ready'));wireTransitions();initSpotlight();
     }
+    function initSpotlight(){if(matchMedia('(pointer:fine)').matches){const card=document.querySelector('.group-card');card?.addEventListener('pointermove',e=>{const r=card.getBoundingClientRect();card.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');card.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%')})}}
+    function wireTransitions(){const reduced=matchMedia('(prefers-reduced-motion:reduce)').matches,layer=document.getElementById('pageTransition');document.querySelectorAll('.group-button,.buttons a').forEach(link=>link.addEventListener('click',e=>{if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||link.target==='_blank')return;if(reduced)return;e.preventDefault();const rect=link.getBoundingClientRect(),store=link.closest('.store'),color=store?getComputedStyle(store).getPropertyValue('--accent').trim():'#8c3fd1';layer.style.setProperty('--tx',(rect.left+rect.width/2)+'px');layer.style.setProperty('--ty',(rect.top+rect.height/2)+'px');layer.style.setProperty('--transition-color',color);layer.classList.add('active');document.body.classList.add('is-leaving');setTimeout(()=>location.href=link.href,420)}))}
     document.getElementById('logout').onclick=async()=>{await db.auth.signOut();location.replace('./index.html')};db.auth.onAuthStateChange((e,s)=>{if(e==='SIGNED_OUT'||!s)location.replace('./index.html')});boot();
   </script>
 </body></html>
