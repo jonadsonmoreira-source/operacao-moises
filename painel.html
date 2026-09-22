@@ -221,7 +221,7 @@ select{
 .tax-overview{margin-top:20px;padding:20px;border:1px solid rgba(255,255,255,.22);border-radius:24px;background:rgba(255,255,255,.08)}
 .tax-overview h3{margin:0 0 6px;font-size:clamp(22px,3vw,34px);color:#fff}
 .tax-overview p{margin:0 0 15px;color:rgba(255,255,255,.78);font-size:13px}
-.tax-overview .result-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.tax-overview .result-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 .tax-overview .result strong{overflow-wrap:anywhere}
 .full{grid-column:1/-1}
 .cta{
@@ -355,6 +355,7 @@ body.compact-admin #c7 .media-daily-panel .result-grid>.result:nth-child(2),
 body.compact-admin #c7 .media-daily-panel .result-grid>.result:nth-child(5){display:block}
 body.compact-admin #c6 .result-grid,
 body.compact-admin #c7 .result-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+body.compact-admin #c7 .tax-overview .result-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 body.compact-admin #c6 .result-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 body.compact-admin .chapter-index a:nth-child(-n+4),
 body.compact-admin .chapter-index a:nth-child(n+9){display:none}
@@ -363,6 +364,7 @@ body.compact-admin .chapter-index a:nth-child(n+9){display:none}
  body.compact-admin #c5{padding-top:150px}
  body.compact-admin #c6 .result-grid,
  body.compact-admin #c7 .result-grid{grid-template-columns:1fr}
+ body.compact-admin #c7 .tax-overview .result-grid{grid-template-columns:1fr}
 }
 </style>
 <style>
@@ -643,6 +645,7 @@ body.compact-admin table{font-variant-numeric:tabular-nums}
         <div class="result main"><small>Status do imposto</small><strong id="taxStatus">Aguardando conferência</strong><span id="taxStatusText">Sem taxa aplicada aos gastos atuais.</span></div>
         <div class="result"><small>Imposto sobre anúncios</small><strong id="taxAmount">—</strong><span id="taxAmountText">Aguardando conferência da cobrança</span></div>
         <div class="result"><small>Custo de mídia com imposto</small><strong id="mediaWithTax">—</strong><span id="mediaWithTaxText">Estimado ou total confirmado na nota</span></div>
+        <div class="result"><small>ROAS com imposto</small><strong id="taxRoas">—</strong><span id="taxRoasText">Vendas registradas ÷ custo total da mídia</span></div>
       </div>
     </div>
     <div class="calc media-daily-panel">
@@ -656,7 +659,7 @@ body.compact-admin table{font-variant-numeric:tabular-nums}
         <div class="result"><small>Média de mídia / dia</small><strong id="mediaAvg">R$ 0</strong><span>histórico real</span></div>
         <div class="result"><small>Orçamento diário alvo</small><strong id="mediaDailyTarget">R$ 0</strong><span>cenário da calculadora</span></div>
         <div class="result"><small>Orçamento restante</small><strong id="mediaRemaining">R$ 0</strong><span>até o limite escolhido</span></div>
-        <div class="result"><small>ROAS acumulado</small><strong id="mediaRoas">—</strong><span>vendas registradas ÷ mídia</span></div>
+        <div class="result"><small>ROAS da Meta (sem imposto)</small><strong id="mediaRoas">—</strong><span>vendas registradas ÷ mídia lançada</span></div>
         <div class="result"><small>Projeção de gasto mensal</small><strong id="mediaProjection">R$ 0</strong><span id="mediaProjectionText">sem dados suficientes</span></div>
         <div class="result full" id="mediaStatusBox"><small>Status da mídia</small><strong id="mediaStatus">Aguardando dados</strong><span id="mediaStatusText">Registre o gasto diário.</span></div>
         <div class="result main"><small>Economia projetada vs. base</small><strong id="currentMediaSaving">—</strong><span id="currentMediaSavingText">aguardando dados combinados</span></div>
@@ -1127,6 +1130,9 @@ function renderMonthlyTax(spend){
  el('taxBase').textContent=brl(spend);
  el('taxAmount').textContent=tax===null?'—':brl(tax);
  el('mediaWithTax').textContent=total===null?'—':brl(total);
+ const sales=monthTotals(selectedMonth).revenue;
+ el('taxRoas').textContent=total>0&&sales>0?(sales/total).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'x':'—';
+ el('taxRoasText').textContent=invoice?'Vendas ÷ total oficial das notas':estimate?'Vendas ÷ mídia com imposto estimado':'Aguardando base fiscal e vendas';
  el('taxSource').textContent=invoice?'Nota do mês':estimate?'Estimativa':'—';
  el('taxStatus').textContent=invoice?'Valor consolidado':invoices.length?'Notas parciais':estimate?'Valor estimado':'Aguardando conferência';
  el('taxStatusText').textContent=invoice?'A soma das notas desta loja prevalece no fechamento do mês.':invoices.length?`${invoices.length} nota(s) recebida(s); confirme quando todas chegarem.`:estimate?`Estimativa de ${Number(row.estimated_rate).toLocaleString('pt-BR',{maximumFractionDigits:4})}% sobre a mídia registrada.`:'Confirme se o gasto lançado já inclui imposto antes de estimar um adicional.';
