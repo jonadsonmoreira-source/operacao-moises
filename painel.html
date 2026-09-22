@@ -644,12 +644,33 @@ body.compact-admin table{font-variant-numeric:tabular-nums}
         <div class="result"><small>Orçamento restante</small><strong id="mediaRemaining">R$ 0</strong><span>até o limite escolhido</span></div>
         <div class="result"><small>ROAS acumulado</small><strong id="mediaRoas">—</strong><span>vendas registradas ÷ mídia</span></div>
         <div class="result"><small>Projeção de gasto mensal</small><strong id="mediaProjection">R$ 0</strong><span id="mediaProjectionText">sem dados suficientes</span></div>
+        <div class="result"><small>Imposto sobre anúncios</small><strong id="taxAmount">—</strong><span id="taxAmountText">Aguardando conferência da cobrança</span></div>
+        <div class="result"><small>Custo de mídia com imposto</small><strong id="mediaWithTax">—</strong><span id="mediaWithTaxText">Estimado ou total confirmado na nota</span></div>
         <div class="result full" id="mediaStatusBox"><small>Status da mídia</small><strong id="mediaStatus">Aguardando dados</strong><span id="mediaStatusText">Registre o gasto diário.</span></div>
         <div class="result main"><small>Economia projetada vs. base</small><strong id="currentMediaSaving">—</strong><span id="currentMediaSavingText">aguardando dados combinados</span></div>
         <div class="result"><small>Mídia estimada necessária</small><strong id="requiredMediaAtCurrentRoas">—</strong><span>para preservar o faturamento-base</span></div>
         <div class="result"><small>Potencial adicional de redução</small><strong id="additionalSavingPotential">—</strong><span id="additionalSavingText">estimativa para teste</span></div>
         <div class="result"><small>ROAS dos dias combinados</small><strong id="matchedDaysRoas">—</strong><span id="matchedDaysConfidence">venda + mídia no mesmo dia</span></div>
         <div class="result full" id="savingDiagnosisBox"><small>Diagnóstico atual</small><strong id="savingDiagnosis">Aguardando dados</strong><span id="savingDiagnosisText">Registre vendas e mídia dos mesmos dias para calcular.</span></div>
+      </div></div>
+    </div>
+    <div class="calc" style="margin-top:18px">
+      <div class="controls">
+        <div class="control"><div class="top"><label>Imposto do mês</label><b id="taxMonthLabel">Mês selecionado</b></div><p style="margin:0;color:var(--muted);font-size:13px">Os gastos diários continuam como foram registrados. Confirme pela cobrança se eles não incluem imposto antes de calcular um adicional.</p></div>
+        <label style="display:flex;gap:9px;align-items:flex-start;font-size:13px"><input id="taxExcluded" type="checkbox" style="margin-top:3px"> Confirmei que os gastos lançados neste mês não incluem o imposto.</label>
+        <div class="control"><div class="top"><label>Taxa estimada</label><b>% sobre a mídia</b></div><input id="taxRate" type="number" min="0" max="100" step="0.0001" placeholder="Informe após conferir a base" style="width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line)"></div>
+        <div class="control"><div class="top"><label>Conta de anúncio da nota</label><b>Nome ou ID</b></div><input id="invoiceAccount" type="text" maxlength="100" placeholder="Identifique a conta desta nota" style="width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line)"></div>
+        <div class="control"><div class="top"><label>Base antes dos tributos na nota</label><b>R$</b></div><input id="invoiceBase" type="number" min="0" step="0.01" placeholder="Preencher quando a nota chegar" style="width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line)"></div>
+        <div class="control"><div class="top"><label>Total cobrado nesta nota</label><b>R$</b></div><input id="invoiceTotal" type="number" min="0" step="0.01" placeholder="Valor desta conta" style="width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line)"></div>
+        <label style="display:flex;gap:9px;align-items:flex-start;font-size:13px"><input id="invoicesComplete" type="checkbox" style="margin-top:3px"> Confirmei que todas as notas desta loja e deste mês foram registradas.</label>
+        <button type="button" onclick="saveMonthlyTax()" style="width:100%;padding:12px;border:0;border-radius:12px;background:linear-gradient(90deg,#ff9650,#f4589b);color:#fff;font-weight:900;cursor:pointer">Salvar imposto do mês</button>
+      </div>
+      <div class="results"><div class="result-grid">
+        <div class="result main"><small>Status do imposto</small><strong id="taxStatus">Aguardando conferência</strong><span id="taxStatusText">Sem taxa aplicada aos gastos atuais.</span></div>
+        <div class="result"><small>Gasto registrado</small><strong id="taxBase">R$ 0</strong><span>Valor original, sem alteração</span></div>
+        <div class="result"><small>Origem do valor</small><strong id="taxSource">—</strong><span>Estimativa ou nota do mês</span></div>
+        <div class="result"><small>Diferença: nota - registros</small><strong id="invoiceVariance">—</strong><span>Conferir datas, contas e lançamentos</span></div>
+        <div class="result full"><small>Notas registradas neste mês</small><span id="invoiceList">Nenhuma nota registrada.</span></div>
       </div></div>
     </div>
     <div style="margin-top:18px;max-height:180px;overflow:auto;border:1px solid rgba(255,255,255,.15);border-radius:18px;background:rgba(255,255,255,.08)">
@@ -744,6 +765,8 @@ let realtimeChannel=null;
 let realtimeTimer=null;
 let mondayInsights=[];
 let mondayConnection=null;
+let monthlyTaxes=[];
+let mediaInvoices=[];
 
 function loginUrl(){
   const base=location.pathname.replace(/painel\.html$/, 'index.html');
@@ -958,14 +981,17 @@ async function saveSettings(){
   showSync(error?'Falha ao sincronizar':'Dados sincronizados');
 }
 async function loadCloudData(){
-  const [{data:settings,error:settingsError},{data:traffic,error:trafficError},{data:commercial,error:commercialError},{data:monday,error:mondayError},{data:connection}]=await Promise.all([
+  const [{data:settings,error:settingsError},{data:traffic,error:trafficError},{data:commercial,error:commercialError},{data:monday,error:mondayError},{data:connection},{data:taxes,error:taxesError},{data:invoices,error:invoicesError}]=await Promise.all([
     db.from('moises_workspace_config').select('*').eq('workspace_id',currentWorkspaceId).single(),
     db.from('moises_daily_metrics').select('record_date,media_spend,leads,clicks,impressions,action_note').eq('workspace_id',currentWorkspaceId).order('record_date'),
     db.from('moises_commercial_daily').select('record_date,sales,orders').eq('workspace_id',currentWorkspaceId).order('record_date'),
     db.from('moises_monday_summaries').select('id,period_start,period_end,title,summary,source_count,published,generated_at,published_at,updated_at').eq('workspace_id',currentWorkspaceId).order('period_start',{ascending:false}).limit(1),
-    db.from('moises_monday_connections').select('board_name,last_synced_at,last_sync_status,last_sync_message').eq('workspace_id',currentWorkspaceId).maybeSingle()
+    db.from('moises_monday_connections').select('board_name,last_synced_at,last_sync_status,last_sync_message').eq('workspace_id',currentWorkspaceId).maybeSingle(),
+    db.from('moises_media_tax_monthly').select('month,media_excludes_tax,estimated_rate,invoices_complete').eq('workspace_id',currentWorkspaceId),
+    db.from('moises_media_invoices').select('month,account_label,invoice_base,invoice_total').eq('workspace_id',currentWorkspaceId)
   ]);
-  if(settingsError||trafficError||commercialError||mondayError||!settings){showSync('Falha ao carregar dados');return false;}
+  if(settingsError||trafficError||commercialError||mondayError||taxesError||invoicesError||!settings){showSync('Falha ao carregar dados');return false;}
+  monthlyTaxes=taxes||[];mediaInvoices=invoices||[];
   mondayInsights=monday||[];mondayConnection=connection||null;
   workspaceSettings=settings;
   ['budget','days','hours','retention','conversion','margin'].forEach(k=>{if(settings[k]!=null&&el(k))el(k).value=settings[k]});
@@ -1027,6 +1053,8 @@ function subscribeRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'moises_daily_metrics',filter:`workspace_id=eq.${currentWorkspaceId}`},refresh)
     .on('postgres_changes',{event:'*',schema:'public',table:'moises_commercial_daily',filter:`workspace_id=eq.${currentWorkspaceId}`},refresh)
     .on('postgres_changes',{event:'*',schema:'public',table:'moises_workspace_config',filter:`workspace_id=eq.${currentWorkspaceId}`},refresh)
+    .on('postgres_changes',{event:'*',schema:'public',table:'moises_media_tax_monthly',filter:`workspace_id=eq.${currentWorkspaceId}`},refresh)
+    .on('postgres_changes',{event:'*',schema:'public',table:'moises_media_invoices',filter:`workspace_id=eq.${currentWorkspaceId}`},refresh)
     .on('postgres_changes',{event:'*',schema:'public',table:'moises_monday_summaries',filter:`workspace_id=eq.${currentWorkspaceId}`},refresh)
     .subscribe(status=>{if(status==='SUBSCRIBED')showSync('Sincronização em tempo real ativa')});
 }
@@ -1041,6 +1069,59 @@ async function deleteDailySale(recordDate){
 }
 async function saveDailySale(){const d=el('salesDate').value,v=+el('salesValue').value,o=Number(el('salesOrders').value);if(!d||!v)return alert('Informe data e venda.');if(!Number.isInteger(o)||o<0)return alert('Informe o número de pedidos com um valor inteiro.');if(await upsertDaily(d,{sales:v,orders:o})){renderDaily();showSync('Venda e pedidos sincronizados')}}
 async function saveDailyMedia(){const d=el('mediaDate').value,v=+el('mediaValue').value;if(!d||!v)return alert('Informe data e gasto.');if(await upsertDaily(d,{media:v})){el('mediaValue').value='';renderDaily()}}
+async function saveMonthlyTax(){
+ const excludes=el('taxExcluded').checked,complete=el('invoicesComplete').checked,account=el('invoiceAccount').value.trim(),rateText=el('taxRate').value.trim(),baseText=el('invoiceBase').value.trim(),totalText=el('invoiceTotal').value.trim();
+ const rate=rateText===''?null:Number(rateText),invoiceBase=baseText===''?null:Number(baseText),invoiceTotal=totalText===''?null:Number(totalText);
+ if((rate!==null&&(!Number.isFinite(rate)||rate<0||rate>100))||(invoiceBase!==null&&(!Number.isFinite(invoiceBase)||invoiceBase<0))||(invoiceTotal!==null&&(!Number.isFinite(invoiceTotal)||invoiceTotal<=0)))return alert('Confira a taxa e os valores da nota.');
+ if((account||invoiceBase!==null||invoiceTotal!==null)&&(!account||invoiceTotal===null))return alert('Informe a conta e o total da nota para registrar esta cobrança.');
+ if(invoiceBase!==null&&(invoiceTotal===null||invoiceBase>invoiceTotal))return alert('Informe o total da nota e confira se ele é maior ou igual à base.');
+ if(!excludes&&rate!==null)return alert('Antes de estimar imposto adicional, confirme que o gasto lançado ainda não inclui esse imposto.');
+ const month=selectedMonth+'-01';
+ if(complete&&!account&&!mediaInvoices.some(x=>x.month===month))return alert('Registre pelo menos uma nota antes de confirmar o fechamento.');
+ const {error}=await db.from('moises_media_tax_monthly').upsert({workspace_id:currentWorkspaceId,month,media_excludes_tax:excludes,estimated_rate:rate,invoices_complete:false,updated_at:new Date().toISOString()},{onConflict:'workspace_id,month'});
+ if(error)return alert('Não foi possível salvar o imposto deste mês.');
+ if(account){
+  const {error:invoiceError}=await db.from('moises_media_invoices').upsert({workspace_id:currentWorkspaceId,month,account_label:account,invoice_base:invoiceBase,invoice_total:invoiceTotal,updated_at:new Date().toISOString()},{onConflict:'workspace_id,month,account_label'});
+  if(invoiceError)return alert('A configuração foi salva, mas a nota não foi registrada. Confira os dados e tente novamente.');
+  mediaInvoices=mediaInvoices.filter(x=>!(x.month===month&&x.account_label===account)).concat({month,account_label:account,invoice_base:invoiceBase,invoice_total:invoiceTotal});
+ }
+ if(complete){
+  const {error:closeError}=await db.from('moises_media_tax_monthly').update({invoices_complete:true,updated_at:new Date().toISOString()}).eq('workspace_id',currentWorkspaceId).eq('month',month);
+  if(closeError)return alert('As notas foram salvas, mas o fechamento ainda não foi confirmado.');
+ }
+ monthlyTaxes=monthlyTaxes.filter(x=>x.month!==month).concat({month,media_excludes_tax:excludes,estimated_rate:rate,invoices_complete:complete});
+ renderMonthlyTax(monthTotals(selectedMonth).spend);showSync('Imposto do mês sincronizado');
+}
+function editInvoice(index){
+ const row=mediaInvoices.filter(x=>x.month===selectedMonth+'-01')[index];
+ if(!row)return;
+ el('invoiceAccount').value=row.account_label;el('invoiceBase').value=row.invoice_base??'';el('invoiceTotal').value=row.invoice_total;
+}
+function renderMonthlyTax(spend){
+ const row=monthlyTaxes.find(x=>x.month===selectedMonth+'-01');
+ const invoices=mediaInvoices.filter(x=>x.month===selectedMonth+'-01');
+ const lastRate=monthlyTaxes.filter(x=>x.month<selectedMonth+'-01'&&x.media_excludes_tax&&x.estimated_rate!=null).sort((a,b)=>b.month.localeCompare(a.month))[0];
+ el('taxMonthLabel').textContent=monthName(selectedMonth);
+ el('taxExcluded').checked=!!row?.media_excludes_tax;
+ el('invoicesComplete').checked=!!row?.invoices_complete;
+ el('taxRate').value=row?.estimated_rate??'';
+ el('taxRate').placeholder=lastRate?`Mês anterior: ${Number(lastRate.estimated_rate).toLocaleString('pt-BR',{maximumFractionDigits:4})}%`:'Informe após conferir a base';
+ el('invoiceAccount').value='';el('invoiceBase').value='';el('invoiceTotal').value='';
+ el('invoiceList').innerHTML=invoices.length?invoices.map((x,i)=>`<button type="button" onclick="editInvoice(${i})" style="margin:5px 6px 0 0;padding:8px;border:1px solid var(--line);border-radius:8px;cursor:pointer">${safeText(x.account_label)} · ${brl(x.invoice_total)}</button>`).join(''):'Nenhuma nota registrada.';
+ const invoice=!!row?.invoices_complete&&invoices.length>0,exact=invoice&&invoices.every(x=>x.invoice_base!=null),estimate=!!row?.media_excludes_tax&&row?.estimated_rate!=null;
+ const invoiceTotal=invoices.reduce((sum,x)=>sum+Number(x.invoice_total),0);
+ const tax=exact?invoiceTotal-invoices.reduce((sum,x)=>sum+Number(x.invoice_base),0):invoice?null:estimate?Math.round(spend*Number(row.estimated_rate))/100:null;
+ const total=invoice?invoiceTotal:tax===null?null:spend+tax;
+ el('taxBase').textContent=brl(spend);
+ el('taxAmount').textContent=tax===null?'—':brl(tax);
+ el('mediaWithTax').textContent=total===null?'—':brl(total);
+ el('taxSource').textContent=invoice?'Nota do mês':estimate?'Estimativa':'—';
+ el('taxStatus').textContent=invoice?'Valor consolidado':invoices.length?'Notas parciais':estimate?'Valor estimado':'Aguardando conferência';
+ el('taxStatusText').textContent=invoice?'A soma das notas desta loja prevalece no fechamento do mês.':invoices.length?`${invoices.length} nota(s) recebida(s); confirme quando todas chegarem.`:estimate?`Estimativa de ${Number(row.estimated_rate).toLocaleString('pt-BR',{maximumFractionDigits:4})}% sobre a mídia registrada.`:'Confirme se o gasto lançado já inclui imposto antes de estimar um adicional.';
+ el('taxAmountText').textContent=exact?'Diferença entre total e base da nota':invoice?'Base da nota ainda não informada':estimate?'Estimado pela taxa configurada':'Nenhuma taxa aplicada';
+ el('mediaWithTaxText').textContent=invoice?'Soma oficial das notas desta loja':estimate?'Gasto registrado + imposto estimado':'Pendente de conferência';
+ el('invoiceVariance').textContent=invoice?(invoiceTotal-spend>=0?'+ ':'- ')+brl(Math.abs(invoiceTotal-spend)):'—';
+}
 function operatingDaysForCurrentMonth(){
  const dated=dailyRecords.map(r=>r.date).filter(Boolean).sort();
  if(!dated.length)return base.operating_days||27;
@@ -1059,6 +1140,7 @@ function renderDaily(){
  const sb=document.getElementById('salesStatusBox');if(!validMargin){document.getElementById('salesStatus').textContent='Margem pendente';document.getElementById('salesStatusText').textContent='Informe a margem de contribuição para calcular o mínimo econômico.';sb.style.background='#fff8ec'}else if(!sD){document.getElementById('salesStatus').textContent='Aguardando dados';document.getElementById('salesStatusText').textContent='Registre as vendas diárias.';sb.style.background=''}else if(proj>=base.revenue){document.getElementById('salesStatus').textContent='Acima da meta';document.getElementById('salesStatusText').textContent='O ritmo atual projeta manutenção ou crescimento do faturamento.';sb.style.background='#f1fff7'}else if(proj>=minMonthly){document.getElementById('salesStatus').textContent='Zona segura';document.getElementById('salesStatusText').textContent='A projeção está abaixo da meta, mas acima do limite econômico.';sb.style.background='#fff8ec'}else{document.getElementById('salesStatus').textContent='Abaixo do mínimo';document.getElementById('salesStatusText').textContent='No ritmo atual, o corte pode não compensar.';sb.style.background='#fff3f7'}
  let ac=0;document.getElementById('salesHistory').innerHTML=sales.map(x=>{ac+=x.value;const orders=dailyRecords.find(r=>r.date===x.date)?.orders||0;return `<tr><td style="padding:10px">${x.date.split('-').reverse().join('/')}</td><td style="padding:10px">${brl(x.value)}</td><td style="padding:10px">${orders.toLocaleString('pt-BR')}</td><td style="padding:10px">${brl(ac)}</td><td style="padding:10px"><button class="delete-record" type="button" onclick="deleteDailySale(\'${x.date}\')">Excluir</button></td></tr>`}).reverse().join('');
  document.getElementById('mediaAccum').textContent=brl(mT);document.getElementById('mediaDaysCount').textContent=mD+' dias registrados';document.getElementById('mediaAvg').textContent=brl(mA);document.getElementById('mediaDailyTarget').textContent=brl(budget/mediaProjectionDays);document.getElementById('mediaRemaining').textContent=brl(Math.max(budget-mT,0));document.getElementById('mediaRoas').textContent=mT?(sT/mT).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'x':'—';const mp=mD?mA*mediaProjectionDays:0;document.getElementById('mediaProjection').textContent=brl(mp);document.getElementById('mediaProjectionText').textContent=mD?`projeção em ${mediaProjectionDays} dias de campanha, incluindo domingos`:'sem dados suficientes';
+ renderMonthlyTax(mT);
  if(!mD){document.getElementById('mediaStatus').textContent='Aguardando dados';document.getElementById('mediaStatusText').textContent='Registre o gasto diário.'}else if(mp<=budget){document.getElementById('mediaStatus').textContent='Dentro do orçamento';document.getElementById('mediaStatusText').textContent='A projeção está dentro do cenário selecionado.'}else{document.getElementById('mediaStatus').textContent='Acima do orçamento';document.getElementById('mediaStatusText').textContent='No ritmo atual, a mídia deve ultrapassar o orçamento escolhido.'}
  const sm=Object.fromEntries(sales.map(x=>[x.date,x.value]));document.getElementById('mediaHistory').innerHTML=media.map(x=>{const sv=sm[x.date]||0,r=sv&&x.value?sv/x.value:0;return `<tr><td style="padding:10px">${x.date.split('-').reverse().join('/')}</td><td style="padding:10px">${brl(x.value)}</td><td style="padding:10px">${sv?brl(sv):'—'}</td><td style="padding:10px">${r?r.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'x':'—'}</td></tr>`}).reverse().join('')
  const mm=Object.fromEntries(media.map(x=>[x.date,x.value]));const matched=sales.filter(x=>mm[x.date]>0);const matchedSales=matched.reduce((sum,x)=>sum+x.value,0),matchedMedia=matched.reduce((sum,x)=>sum+mm[x.date],0),matchedRoas=matchedMedia?matchedSales/matchedMedia:0,requiredMedia=matchedRoas?base.revenue/matchedRoas:0,projectedSaving=base.spend-mp,additionalPotential=matchedRoas?Math.max(mp-requiredMedia,0):0;
