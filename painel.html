@@ -1114,18 +1114,20 @@ function editInvoice(index){
 function renderMonthlyTax(spend){
  const row=monthlyTaxes.find(x=>x.month===selectedMonth+'-01');
  const invoices=mediaInvoices.filter(x=>x.month===selectedMonth+'-01');
- const lastRate=monthlyTaxes.filter(x=>x.month<selectedMonth+'-01'&&x.media_excludes_tax&&x.estimated_rate!=null).sort((a,b)=>b.month.localeCompare(a.month))[0];
+ const previousSetting=monthlyTaxes.filter(x=>x.month<selectedMonth+'-01').sort((a,b)=>b.month.localeCompare(a.month))[0];
+ const lastRate=previousSetting?.media_excludes_tax&&previousSetting.estimated_rate!=null?previousSetting:null;
+ const effectiveRate=row?(row.media_excludes_tax?row.estimated_rate:null):lastRate?.estimated_rate;
  el('taxMonthLabel').textContent=monthName(selectedMonth);
  el('taxOverviewMonth').textContent=monthName(selectedMonth);
- el('taxExcluded').checked=!!row?.media_excludes_tax;
+ el('taxExcluded').checked=row?!!row.media_excludes_tax:!!lastRate;
  el('invoicesComplete').checked=!!row?.invoices_complete;
- el('taxRate').value=row?.estimated_rate??'';
+ el('taxRate').value=row?row.estimated_rate??'':lastRate?.estimated_rate??'';
  el('taxRate').placeholder=lastRate?`Mês anterior: ${Number(lastRate.estimated_rate).toLocaleString('pt-BR',{maximumFractionDigits:4})}%`:'Informe após conferir a base';
  el('invoiceAccount').value='';el('invoiceBase').value='';el('invoiceTotal').value='';
  el('invoiceList').innerHTML=invoices.length?invoices.map((x,i)=>`<button type="button" onclick="editInvoice(${i})" style="margin:5px 6px 0 0;padding:8px;border:1px solid var(--line);border-radius:8px;cursor:pointer">${safeText(x.account_label)} · ${brl(x.invoice_total)}</button>`).join(''):'Nenhuma nota registrada.';
- const invoice=!!row?.invoices_complete&&invoices.length>0,exact=invoice&&invoices.every(x=>x.invoice_base!=null),estimate=!!row?.media_excludes_tax&&row?.estimated_rate!=null;
+ const invoice=!!row?.invoices_complete&&invoices.length>0,exact=invoice&&invoices.every(x=>x.invoice_base!=null),estimate=effectiveRate!=null;
  const invoiceTotal=invoices.reduce((sum,x)=>sum+Number(x.invoice_total),0);
- const tax=exact?invoiceTotal-invoices.reduce((sum,x)=>sum+Number(x.invoice_base),0):invoice?null:estimate?Math.round(spend*Number(row.estimated_rate))/100:null;
+ const tax=exact?invoiceTotal-invoices.reduce((sum,x)=>sum+Number(x.invoice_base),0):invoice?null:estimate?Math.round(spend*Number(effectiveRate))/100:null;
  const total=invoice?invoiceTotal:tax===null?null:spend+tax;
  el('taxBase').textContent=brl(spend);
  el('taxAmount').textContent=tax===null?'—':brl(tax);
@@ -1133,9 +1135,9 @@ function renderMonthlyTax(spend){
  const sales=monthTotals(selectedMonth).revenue;
  el('taxRoas').textContent=total>0&&sales>0?(sales/total).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'x':'—';
  el('taxRoasText').textContent=invoice?'Vendas ÷ total oficial das notas':estimate?'Vendas ÷ mídia com imposto estimado':'Aguardando base fiscal e vendas';
- el('taxSource').textContent=invoice?'Nota do mês':estimate?'Estimativa':'—';
+ el('taxSource').textContent=invoice?'Nota do mês':estimate?row?'Estimativa':'Taxa da própria loja':'—';
  el('taxStatus').textContent=invoice?'Valor consolidado':invoices.length?'Notas parciais':estimate?'Valor estimado':'Aguardando conferência';
- el('taxStatusText').textContent=invoice?'A soma das notas desta loja prevalece no fechamento do mês.':invoices.length?`${invoices.length} nota(s) recebida(s); confirme quando todas chegarem.`:estimate?`Estimativa de ${Number(row.estimated_rate).toLocaleString('pt-BR',{maximumFractionDigits:4})}% sobre a mídia registrada.`:'Confirme se o gasto lançado já inclui imposto antes de estimar um adicional.';
+ el('taxStatusText').textContent=invoice?'A soma das notas desta loja prevalece no fechamento do mês.':invoices.length?`${invoices.length} nota(s) recebida(s); confirme quando todas chegarem.`:estimate?`Estimativa de ${Number(effectiveRate).toLocaleString('pt-BR',{maximumFractionDigits:4})}% sobre a mídia registrada${row?'':' (taxa do mês anterior desta loja)'}.`:'Confirme se o gasto lançado já inclui imposto antes de estimar um adicional.';
  el('taxAmountText').textContent=exact?'Diferença entre total e base da nota':invoice?'Base da nota ainda não informada':estimate?'Estimado pela taxa configurada':'Nenhuma taxa aplicada';
  el('mediaWithTaxText').textContent=invoice?'Soma oficial das notas desta loja':estimate?'Gasto registrado + imposto estimado':'Pendente de conferência';
  el('invoiceVariance').textContent=invoice?(invoiceTotal-spend>=0?'+ ':'- ')+brl(Math.abs(invoiceTotal-spend)):'—';
