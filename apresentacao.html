@@ -117,8 +117,8 @@ function rowsForMonth(key){return allRows().filter(r=>r.date.startsWith(key+'-')
 function rows(){return rowsForMonth(selectedMonth||currentMonthKey())}
 function monthTotals(key){return rowsForMonth(key).reduce((a,r)=>({sales:a.sales+r.sales,media:a.media+r.media,orders:a.orders+r.orders}),{sales:0,media:0,orders:0})}
 function renderTax(){
-  const media=monthTotals(selectedMonth).media,row=monthlyTaxes.find(x=>x.month===selectedMonth+'-01'),invoices=mediaInvoices.filter(x=>x.month===selectedMonth+'-01'),confirmed=!!row?.invoices_complete&&invoices.length>0,hasBases=confirmed&&invoices.every(x=>x.invoice_base!=null),estimated=!!row?.media_excludes_tax&&row?.estimated_rate!=null;
-  const invoiceTotal=invoices.reduce((sum,x)=>sum+num(x.invoice_total),0),invoiceBase=invoices.reduce((sum,x)=>sum+num(x.invoice_base),0),tax=hasBases?invoiceTotal-invoiceBase:confirmed?null:estimated?Math.round(media*num(row.estimated_rate))/100:null,total=confirmed?invoiceTotal:tax===null?null:media+tax;
+  const media=monthTotals(selectedMonth).media,row=monthlyTaxes.find(x=>x.month===selectedMonth+'-01'),invoices=mediaInvoices.filter(x=>x.month===selectedMonth+'-01'),previousSetting=monthlyTaxes.filter(x=>x.month<selectedMonth+'-01').sort((a,b)=>b.month.localeCompare(a.month))[0],inherited=previousSetting?.media_excludes_tax&&previousSetting.estimated_rate!=null?previousSetting:null,effectiveRate=row?(row.media_excludes_tax?row.estimated_rate:null):inherited?.estimated_rate,confirmed=!!row?.invoices_complete&&invoices.length>0,hasBases=confirmed&&invoices.every(x=>x.invoice_base!=null),estimated=effectiveRate!=null;
+  const invoiceTotal=invoices.reduce((sum,x)=>sum+num(x.invoice_total),0),invoiceBase=invoices.reduce((sum,x)=>sum+num(x.invoice_base),0),tax=hasBases?invoiceTotal-invoiceBase:confirmed?null:estimated?Math.round(media*num(effectiveRate))/100:null,total=confirmed?invoiceTotal:tax===null?null:media+tax;
   $('taxMonth').textContent=monthName(selectedMonth);
   $('taxMediaBase').textContent=brlExact(media);
   $('taxAmount').textContent=tax===null?'—':brlExact(tax);
@@ -126,7 +126,7 @@ function renderTax(){
   const revenue=monthTotals(selectedMonth).sales;
   $('taxRoas').textContent=total>0&&revenue>0?(revenue/total).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'x':'—';
   $('taxRoasCaption').textContent=confirmed?'Faturamento ÷ total oficial das notas':estimated?'Faturamento ÷ mídia com imposto estimado':'Aguardando base fiscal e vendas';
-  $('taxExplanation').textContent=confirmed?'Valor consolidado: soma de todas as notas fiscais registradas para esta loja e este mês.':estimated?`Estimativa automática de ${num(row.estimated_rate).toLocaleString('pt-BR',{maximumFractionDigits:4})}% sobre o gasto registrado na Meta; será substituída pelas notas quando todas forem recebidas.`:'Esta loja ainda não tem uma taxa fiscal confirmada para o mês. O gasto registrado permanece sem acréscimo.';
+  $('taxExplanation').textContent=confirmed?'Valor consolidado: soma de todas as notas fiscais registradas para esta loja e este mês.':estimated?`Estimativa automática de ${num(effectiveRate).toLocaleString('pt-BR',{maximumFractionDigits:4})}% sobre o gasto registrado na Meta${row?'':' (taxa do último mês configurado desta loja)'}; será substituída pelas notas quando todas forem recebidas.`:'Esta loja ainda não tem uma taxa fiscal confirmada para o mês. O gasto registrado permanece sem acréscimo.';
   $('taxAmountCaption').textContent=hasBases?'Total das notas menos a base antes dos tributos':confirmed?'Base da nota não informada':estimated?invoices.length?'Estimativa · notas parciais recebidas':'Imposto estimado, nota pendente':'Aguardando taxa desta loja';
   $('taxTotalCaption').textContent=confirmed?'Total oficial das notas desta loja':estimated?'Gasto registrado + imposto estimado':'Aguardando base fiscal';
 }
