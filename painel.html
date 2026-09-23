@@ -420,9 +420,9 @@ body.compact-admin table{font-variant-numeric:tabular-nums}
 
 <section id="c1" class="chapter hero" hidden aria-hidden="true">
   <div class="inner reveal">
-    <div class="kicker" data-workspace-brand>Jaraguá Colchões e Estofados</div>
+    <div class="kicker" data-workspace-brand>Operação Moisés</div>
     <h1>Operação <span>Moisés</span></h1>
-    <div class="quote" id="workspaceQuote">Um projeto para descobrir o custo real necessário para sustentar o faturamento da Jaraguá e direcionar o excedente para onde o grupo gera mais valor.</div>
+    <div class="quote" id="workspaceQuote">Uma operação independente, acompanhada com seus próprios dados, histórico e decisões.</div>
   </div>
   <div class="scroll-hint">Role para continuar ↓</div>
 </section>
@@ -640,7 +640,7 @@ body.compact-admin table{font-variant-numeric:tabular-nums}
     <p class="lead">Registre o gasto real do dia anterior. O painel cruza mídia e vendas automaticamente.</p>
     <div class="tax-overview" aria-label="Imposto da mídia no mês">
       <h3>Imposto da mídia · <span id="taxOverviewMonth">mês selecionado</span></h3>
-      <p>Estimativa durante o mês; quando todas as notas chegarem, o total cobrado passa a ser o valor consolidado desta loja.</p>
+      <p>Leitura estratégica do custo real da mídia e do retorno da operação. A estimativa é substituída pelo valor confirmado quando a nota do mês estiver disponível.</p>
       <div class="result-grid">
         <div class="result main"><small>Status do imposto</small><strong id="taxStatus">Aguardando conferência</strong><span id="taxStatusText">Sem taxa aplicada aos gastos atuais.</span></div>
         <div class="result"><small>Imposto sobre anúncios</small><strong id="taxAmount">—</strong><span id="taxAmountText">Aguardando conferência da cobrança</span></div>
@@ -669,23 +669,11 @@ body.compact-admin table{font-variant-numeric:tabular-nums}
         <div class="result full" id="savingDiagnosisBox"><small>Diagnóstico atual</small><strong id="savingDiagnosis">Aguardando dados</strong><span id="savingDiagnosisText">Registre vendas e mídia dos mesmos dias para calcular.</span></div>
       </div></div>
     </div>
-    <div class="calc" style="margin-top:18px">
-      <div class="controls">
-        <div class="control"><div class="top"><label>Imposto do mês</label><b id="taxMonthLabel">Mês selecionado</b></div><p style="margin:0;color:var(--muted);font-size:13px">Os gastos diários continuam como foram registrados. Confirme pela cobrança se eles não incluem imposto antes de calcular um adicional.</p></div>
-        <label style="display:flex;gap:9px;align-items:flex-start;font-size:13px"><input id="taxExcluded" type="checkbox" style="margin-top:3px"> Confirmei que os gastos lançados neste mês não incluem o imposto.</label>
-        <div class="control"><div class="top"><label>Taxa estimada</label><b>% sobre a mídia</b></div><input id="taxRate" type="number" min="0" max="100" step="0.0001" placeholder="Informe após conferir a base" style="width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line)"></div>
-        <div class="control"><div class="top"><label>Conta de anúncio da nota</label><b>Nome ou ID</b></div><input id="invoiceAccount" type="text" maxlength="100" placeholder="Identifique a conta desta nota" style="width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line)"></div>
-        <div class="control"><div class="top"><label>Base antes dos tributos na nota</label><b>R$</b></div><input id="invoiceBase" type="number" min="0" step="0.01" placeholder="Preencher quando a nota chegar" style="width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line)"></div>
-        <div class="control"><div class="top"><label>Total cobrado nesta nota</label><b>R$</b></div><input id="invoiceTotal" type="number" min="0" step="0.01" placeholder="Valor desta conta" style="width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line)"></div>
-        <label style="display:flex;gap:9px;align-items:flex-start;font-size:13px"><input id="invoicesComplete" type="checkbox" style="margin-top:3px"> Confirmei que todas as notas desta loja e deste mês foram registradas.</label>
-        <button type="button" onclick="saveMonthlyTax()" style="width:100%;padding:12px;border:0;border-radius:12px;background:linear-gradient(90deg,#ff9650,#f4589b);color:#fff;font-weight:900;cursor:pointer">Salvar imposto do mês</button>
-      </div>
-      <div class="results"><div class="result-grid">
-        <div class="result"><small>Gasto registrado</small><strong id="taxBase">R$ 0</strong><span>Valor original, sem alteração</span></div>
-        <div class="result"><small>Origem do valor</small><strong id="taxSource">—</strong><span>Estimativa ou nota do mês</span></div>
-        <div class="result"><small>Diferença: nota - registros</small><strong id="invoiceVariance">—</strong><span>Conferir datas, contas e lançamentos</span></div>
-        <div class="result full"><small>Notas registradas neste mês</small><span id="invoiceList">Nenhuma nota registrada.</span></div>
-      </div></div>
+    <div hidden aria-hidden="true">
+      <span id="taxMonthLabel"></span><input id="taxExcluded" type="checkbox"><input id="taxRate" type="number">
+      <input id="invoiceAccount" type="text"><input id="invoiceBase" type="number"><input id="invoiceTotal" type="number">
+      <input id="invoicesComplete" type="checkbox"><strong id="taxBase"></strong><strong id="taxSource"></strong>
+      <strong id="invoiceVariance"></strong><span id="invoiceList"></span>
     </div>
     <div style="margin-top:18px;max-height:180px;overflow:auto;border:1px solid rgba(255,255,255,.15);border-radius:18px;background:rgba(255,255,255,.08)">
       <table style="width:100%;border-collapse:collapse;font-size:12px;color:#fff"><thead><tr><th style="padding:10px;text-align:left;color:rgba(255,255,255,.65)">Data</th><th style="padding:10px;text-align:left;color:rgba(255,255,255,.65)">Mídia</th><th style="padding:10px;text-align:left;color:rgba(255,255,255,.65)">Venda</th><th style="padding:10px;text-align:left;color:rgba(255,255,255,.65)">ROAS</th></tr></thead><tbody id="mediaHistory"></tbody></table>
@@ -798,7 +786,14 @@ async function requireAuth(){
     return false;
   }
   MoisesWorkspace.applyBrand(currentWorkspace);MoisesWorkspace.wireSelector(document.getElementById('workspaceSelector'),currentMemberships,access.membership);MoisesWorkspace.wireLinks(currentWorkspaceId);
-  document.getElementById('workspaceQuote').textContent=currentWorkspace?.slug==='porto'?'Um projeto para acompanhar a Porto desde o primeiro dia, transformar cada campanha em aprendizado e construir uma operação cada vez mais eficiente.':'Um projeto para descobrir o custo real necessário para sustentar o faturamento da Jaraguá e direcionar o excedente para onde o grupo gera mais valor.';
+  const workspaceQuotes={
+    jaragua:'Um projeto para descobrir o custo real necessário para sustentar o faturamento da Jaraguá e direcionar o excedente para onde o grupo gera mais valor.',
+    porto:'Um projeto para acompanhar a Porto desde o primeiro dia, transformar cada campanha em aprendizado e construir uma operação cada vez mais eficiente.',
+    'beira-rio':'Uma leitura independente da Beira Rio para acompanhar faturamento, mídia e eficiência sem misturar os resultados com outras operações.',
+    beira_rio:'Uma leitura independente da Beira Rio para acompanhar faturamento, mídia e eficiência sem misturar os resultados com outras operações.',
+    floripa:'Uma leitura independente da Floripa para acompanhar faturamento, mídia e eficiência de acordo com o seu próprio histórico.'
+  };
+  document.getElementById('workspaceQuote').textContent=workspaceQuotes[currentWorkspace?.slug]||currentWorkspace?.description||'Uma operação independente, acompanhada com seus próprios dados, histórico e decisões.';
   document.getElementById('accountEmail').textContent=currentUser.email||'Conta conectada';
   document.body.classList.remove('auth-pending');
   return true;
@@ -895,7 +890,7 @@ function updateCalculator(){
   const marginValue=Number(el('margin').value);
 
   if(!base.revenue||!base.spend||!base.ticket){
-    el('budgetLabel').textContent=brl(budgetValue);el('flowTargetSpend').textContent=compact(budgetValue);el('daysLabel').textContent=daysValue+' dias';el('hoursLabel').textContent=hoursValue+'h/dia';el('retLabel').textContent=retentionValue.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%';el('convLabel').textContent=conversionValue.toLocaleString('pt-BR',{maximumFractionDigits:2})+'%';el('marginLabel').textContent=marginValue.toLocaleString('pt-BR',{maximumFractionDigits:0})+'%';el('saving').textContent='—';el('savingPct').textContent='aguardando a primeira base';el('daily').textContent=daysValue?brl(budgetValue/daysValue):'—';el('dailyFoot').textContent='planejamento inicial';el('windowResult').textContent=hoursValue+'h/dia';el('windowFoot').textContent=hoursValue===24?'campanha disponível 24 horas':'janela definida';el('minRevenue').textContent='—';el('revLoss').textContent='sem histórico para comparar';el('roasNeed').textContent='—';el('ordersNeed').textContent='—';el('leadsNeed').textContent='—';el('leadDelta').textContent='os primeiros dados criarão a referência';el('lostContribution').textContent='—';el('marginExplain').textContent='cálculo disponível após a primeira base';el('economicImpact').textContent='Em construção';el('economicText').textContent='Registre vendas, pedidos e mídia. O painel começará a calcular a eficiência conforme a Porto formar seu histórico.';
+    el('budgetLabel').textContent=brl(budgetValue);el('flowTargetSpend').textContent=compact(budgetValue);el('daysLabel').textContent=daysValue+' dias';el('hoursLabel').textContent=hoursValue+'h/dia';el('retLabel').textContent=retentionValue.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%';el('convLabel').textContent=conversionValue.toLocaleString('pt-BR',{maximumFractionDigits:2})+'%';el('marginLabel').textContent=marginValue.toLocaleString('pt-BR',{maximumFractionDigits:0})+'%';el('saving').textContent='—';el('savingPct').textContent='aguardando a primeira base';el('daily').textContent=daysValue?brl(budgetValue/daysValue):'—';el('dailyFoot').textContent='planejamento inicial';el('windowResult').textContent=hoursValue+'h/dia';el('windowFoot').textContent=hoursValue===24?'campanha disponível 24 horas':'janela definida';el('minRevenue').textContent='—';el('revLoss').textContent='sem histórico para comparar';el('roasNeed').textContent='—';el('ordersNeed').textContent='—';el('leadsNeed').textContent='—';el('leadDelta').textContent='os primeiros dados criarão a referência';el('lostContribution').textContent='—';el('marginExplain').textContent='cálculo disponível após a primeira base';el('economicImpact').textContent='Em construção';el('economicText').textContent=`Registre vendas, pedidos e mídia. O painel começará a calcular a eficiência conforme ${currentWorkspace?.brand_name||currentWorkspace?.name||'esta operação'} formar seu próprio histórico.`;
     return;
   }
 
