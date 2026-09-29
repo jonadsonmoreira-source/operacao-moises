@@ -2,7 +2,7 @@
   const storageKey='moises-workspace';
   const safeStorage={get(){try{return localStorage.getItem(storageKey)}catch(e){return null}},set(value){try{localStorage.setItem(storageKey,value)}catch(e){}}};
   function workspaceOf(member){return member?.moises_workspaces||member?.workspace||null}
-  function routeFor(role){return role==='admin'?'painel.html?v=20260915-exact2':role==='traffic_manager'?'gestor.html':'apresentacao.html'}
+  function routeFor(role){return role==='admin'?'painel.html?v=20260929-real-roas':role==='traffic_manager'?'gestor.html':'apresentacao.html'}
   async function memberships(db,userId){
     const {data,error}=await db.from('moises_workspace_members').select('workspace_id,role,moises_workspaces(id,name,slug,brand_name,accent_color,secondary_color,description,is_active)').eq('user_id',userId);
     if(error)throw error;
@@ -25,7 +25,7 @@
     document.querySelectorAll('[data-workspace-brand]').forEach(n=>n.textContent=workspace.brand_name||workspace.name);
     document.querySelectorAll('[data-workspace-name]').forEach(n=>n.textContent=workspace.name||workspace.brand_name);
   }
-  function workspaceUrl(path,id){const url=new URL(path,location.href);url.searchParams.set('workspace',id);if(url.pathname.endsWith('/painel.html'))url.searchParams.set('v','20260915-exact2');return url.pathname.split('/').pop()+url.search}
+  function workspaceUrl(path,id){const url=new URL(path,location.href);url.searchParams.set('workspace',id);if(url.pathname.endsWith('/painel.html'))url.searchParams.set('v','20260929-real-roas');return url.pathname.split('/').pop()+url.search}
   function wireSelector(node,items,current){
     if(!node)return;
     node.innerHTML=items.map(m=>{const w=workspaceOf(m);return `<option value="${m.workspace_id}">${w?.brand_name||w?.name||'Operação'}</option>`}).join('');
@@ -33,6 +33,21 @@
     node.addEventListener('change',()=>{safeStorage.set(node.value);location.assign(workspaceUrl(location.pathname,node.value))});
   }
   function wireLinks(id){document.querySelectorAll('a[data-workspace-link]').forEach(a=>a.href=workspaceUrl(a.getAttribute('href'),id))}
+  function mediaCost(month,media,taxes=[],invoices=[],options={}){
+    const monthDate=month.length===7?month+'-01':month;
+    const amount=Number(media)||0,row=taxes.find(x=>x.month===monthDate);
+    const previous=taxes.filter(x=>x.month<monthDate&&x.media_excludes_tax&&x.estimated_rate!=null).sort((a,b)=>b.month.localeCompare(a.month))[0];
+    const rate=row?(row.media_excludes_tax?Number(row.estimated_rate):null):previous?Number(previous.estimated_rate):null;
+    const monthInvoices=invoices.filter(x=>x.month===monthDate),confirmed=options.useInvoices!==false&&!!row?.invoices_complete&&monthInvoices.length>0;
+    if(confirmed){
+      const total=monthInvoices.reduce((sum,x)=>sum+(Number(x.invoice_total)||0),0);
+      const hasBases=monthInvoices.every(x=>x.invoice_base!=null),base=hasBases?monthInvoices.reduce((sum,x)=>sum+(Number(x.invoice_base)||0),0):null;
+      return{media:amount,total,tax:base===null?null:total-base,rate,source:'invoice',confirmed:true};
+    }
+    const tax=rate==null?0:Math.round(amount*rate)/100;
+    return{media:amount,total:amount+tax,tax,rate,source:rate==null?'unadjusted':'estimate',confirmed:false};
+  }
+  function realRoas(revenue,month,media,taxes=[],invoices=[],options={}){const cost=mediaCost(month,media,taxes,invoices,options);return{...cost,roas:cost.total>0?(Number(revenue)||0)/cost.total:0}}
 
   function ensureWorkspaceTheme(){
     if(document.getElementById('moises-workspace-theme'))return;
@@ -165,5 +180,5 @@ html[data-workspace="floripa"][data-theme="dark"] .month-control{
 `;
     document.head.appendChild(style);
   }
-  window.MoisesWorkspace={memberships,resolve,choose,workspaceOf,routeFor,applyBrand,wireSelector,wireLinks,workspaceUrl,safeStorage};
+  window.MoisesWorkspace={memberships,resolve,choose,workspaceOf,routeFor,applyBrand,wireSelector,wireLinks,workspaceUrl,safeStorage,mediaCost,realRoas};
 })();

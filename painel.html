@@ -435,7 +435,7 @@ body.compact-admin table{font-variant-numeric:tabular-nums}
     <div class="metrics">
       <div class="metric"><small>Faturamento</small><strong id="baseRevenue">—</strong><span>resultado do mês analisado</span></div>
       <div class="metric"><small>Investimento</small><strong id="baseSpend">—</strong><span>Meta Ads no mês analisado</span></div>
-      <div class="metric"><small>ROAS bruto</small><strong id="baseRoas">—</strong><span>faturamento ÷ mídia</span></div>
+      <div class="metric"><small>ROAS real</small><strong id="baseRoas">—</strong><span>faturamento ÷ mídia com imposto</span></div>
       <div class="metric"><small>Conversão</small><strong id="baseConversion">—</strong><span id="baseOrdersLeads">dados protegidos</span></div>
       <div class="metric"><small>Leads</small><strong id="baseLeads">—</strong><span id="baseLeadsDaily">média diária</span></div>
       <div class="metric"><small>Mídia / dia</small><strong id="baseSpendDaily">—</strong><span id="baseOperatingDays">dias de veiculação</span></div>
@@ -571,7 +571,7 @@ body.compact-admin table{font-variant-numeric:tabular-nums}
           </div>
 
           <div class="result">
-            <small>ROAS bruto necessário</small>
+            <small>ROAS real necessário</small>
             <strong id="roasNeed">—</strong>
             <span>faturamento mínimo ÷ nova mídia</span>
           </div>
@@ -645,7 +645,7 @@ body.compact-admin table{font-variant-numeric:tabular-nums}
         <div class="result main"><small>Status do imposto</small><strong id="taxStatus">Aguardando conferência</strong><span id="taxStatusText">Sem taxa aplicada aos gastos atuais.</span></div>
         <div class="result"><small>Imposto sobre anúncios</small><strong id="taxAmount">—</strong><span id="taxAmountText">Aguardando conferência da cobrança</span></div>
         <div class="result"><small>Custo de mídia com imposto</small><strong id="mediaWithTax">—</strong><span id="mediaWithTaxText">Estimado ou total confirmado na nota</span></div>
-        <div class="result"><small>ROAS com imposto</small><strong id="taxRoas">—</strong><span id="taxRoasText">Vendas registradas ÷ custo total da mídia</span></div>
+        <div class="result"><small>ROAS real</small><strong id="taxRoas">—</strong><span id="taxRoasText">Vendas registradas ÷ custo total da mídia</span></div>
       </div>
     </div>
     <div class="calc media-daily-panel">
@@ -659,13 +659,13 @@ body.compact-admin table{font-variant-numeric:tabular-nums}
         <div class="result"><small>Média de mídia / dia</small><strong id="mediaAvg">R$ 0</strong><span>histórico real</span></div>
         <div class="result"><small>Orçamento diário alvo</small><strong id="mediaDailyTarget">R$ 0</strong><span>cenário da calculadora</span></div>
         <div class="result"><small>Orçamento restante</small><strong id="mediaRemaining">R$ 0</strong><span>até o limite escolhido</span></div>
-        <div class="result"><small>ROAS da Meta (sem imposto)</small><strong id="mediaRoas">—</strong><span>vendas registradas ÷ mídia lançada</span></div>
+        <div class="result"><small>ROAS real</small><strong id="mediaRoas">—</strong><span>vendas registradas ÷ mídia com imposto</span></div>
         <div class="result"><small>Projeção de gasto mensal</small><strong id="mediaProjection">R$ 0</strong><span id="mediaProjectionText">sem dados suficientes</span></div>
         <div class="result full" id="mediaStatusBox"><small>Status da mídia</small><strong id="mediaStatus">Aguardando dados</strong><span id="mediaStatusText">Registre o gasto diário.</span></div>
         <div class="result main"><small>Economia projetada vs. base</small><strong id="currentMediaSaving">—</strong><span id="currentMediaSavingText">aguardando dados combinados</span></div>
         <div class="result"><small>Mídia estimada necessária</small><strong id="requiredMediaAtCurrentRoas">—</strong><span>para preservar o faturamento-base</span></div>
         <div class="result"><small>Potencial adicional de redução</small><strong id="additionalSavingPotential">—</strong><span id="additionalSavingText">estimativa para teste</span></div>
-        <div class="result"><small>ROAS dos dias combinados</small><strong id="matchedDaysRoas">—</strong><span id="matchedDaysConfidence">venda + mídia no mesmo dia</span></div>
+        <div class="result"><small>ROAS real dos dias combinados</small><strong id="matchedDaysRoas">—</strong><span id="matchedDaysConfidence">venda + mídia no mesmo dia</span></div>
         <div class="result full" id="savingDiagnosisBox"><small>Diagnóstico atual</small><strong id="savingDiagnosis">Aguardando dados</strong><span id="savingDiagnosisText">Registre vendas e mídia dos mesmos dias para calcular.</span></div>
       </div></div>
     </div>
@@ -748,7 +748,7 @@ body.compact-admin table{font-variant-numeric:tabular-nums}
   </div>
 </section>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.56.0/dist/umd/supabase.min.js"></script><script src="./workspace.js?v=20260915-exact2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.56.0/dist/umd/supabase.min.js"></script><script src="./workspace.js?v=20260929-real-roas"></script>
 <script>
 const SUPABASE_URL='https://nubzdbalhhqgrwjyjord.supabase.co';
 const SUPABASE_KEY='sb_publishable_TG0W0Ih25aHB2A7u0Tkdig_l6R168sd';
@@ -840,6 +840,8 @@ function previousMonthKey(key){const [y,m]=key.split('-').map(Number),d=new Date
 function monthName(key){const [y,m]=key.split('-').map(Number),name=new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric'}).format(new Date(y,m-1,15));return name.charAt(0).toUpperCase()+name.slice(1)}
 function monthRecords(key){return allDailyRecords.filter(r=>r.date.startsWith(key+'-'))}
 function monthTotals(key){return monthRecords(key).reduce((a,r)=>({revenue:a.revenue+r.sales,spend:a.spend+r.media,orders:a.orders+r.orders,leads:a.leads+r.leads}),{revenue:0,spend:0,orders:0,leads:0})}
+function realMediaFor(key,spend,useInvoices=true){return MoisesWorkspace.mediaCost(key,spend,monthlyTaxes,mediaInvoices,{useInvoices}).total}
+function realRoasFor(key,revenue,spend,useInvoices=true){const cost=realMediaFor(key,spend,useInvoices);return cost?revenue/cost:0}
 function operatingDaysInMonth(key){const [year,month]=key.split('-').map(Number),total=new Date(Date.UTC(year,month,0)).getUTCDate();let count=0;for(let day=1;day<=total;day++)if(new Date(Date.UTC(year,month-1,day)).getUTCDay()!==0)count++;return count}
 function applySelectedMonth(){dailyRecords=monthRecords(selectedMonth);const previousKey=previousMonthKey(selectedMonth),previous=monthTotals(previousKey),hasPrevious=previous.revenue>0||previous.spend>0;if(hasPrevious){const before=monthTotals(previousMonthKey(previousKey)),hasBefore=before.revenue>0||before.spend>0;Object.assign(base,{period_label:monthName(previousKey),operating_days:operatingDaysInMonth(previousKey),spend:previous.spend,revenue:previous.revenue,orders:previous.orders,leads:previous.leads,previous_spend:hasBefore?before.spend:+workspaceSettings.base_spend,previous_revenue:hasBefore?before.revenue:+workspaceSettings.base_revenue})}else{Object.assign(base,{period_label:workspaceSettings.period_label,operating_days:+workspaceSettings.operating_days,spend:+workspaceSettings.base_spend,revenue:+workspaceSettings.base_revenue,orders:+workspaceSettings.base_orders,leads:+workspaceSettings.base_leads,previous_spend:+workspaceSettings.previous_spend,previous_revenue:+workspaceSettings.previous_revenue})}base.ticket=base.orders?base.revenue/base.orders:0}
 function syncMonthSelector(){const node=el('monthSelector'),keys=[...new Set(allDailyRecords.map(r=>r.date.slice(0,7)).concat(currentMonthKey()))].sort().reverse();if(!selectedMonth||!keys.includes(selectedMonth))selectedMonth=currentMonthKey();node.innerHTML=keys.map(k=>`<option value="${k}">${monthName(k)}</option>`).join('');node.value=selectedMonth;applySelectedMonth()}
@@ -857,8 +859,9 @@ function compact(v){
 }
 function pct(v){return Number(v).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%'}
 function renderBaseline(){
-  const roas=base.spend?base.revenue/base.spend:0;
-  const previousRoas=base.previous_spend?base.previous_revenue/base.previous_spend:0;
+  const baseMonth=previousMonthKey(selectedMonth),comparisonMonth=previousMonthKey(baseMonth);
+  const roas=base.spend?realRoasFor(baseMonth,base.revenue,base.spend):0;
+  const previousRoas=base.previous_spend?realRoasFor(comparisonMonth,base.previous_revenue,base.previous_spend):0;
   const conversion=base.leads?base.orders/base.leads*100:0;
   const revenueGrowth=base.previous_revenue?(base.revenue/base.previous_revenue-1)*100:0;
   const spendGrowth=base.previous_spend?(base.spend/base.previous_spend-1)*100:0;
@@ -878,7 +881,7 @@ function renderBaseline(){
   el('revenueGrowth').textContent=(revenueGrowth>=0?'+':'')+pct(revenueGrowth);el('revenueComparison').textContent=`${compact(base.previous_revenue)} → ${compact(base.revenue)}`;
   el('spendGrowth').textContent=(spendGrowth>=0?'+':'')+pct(spendGrowth);el('spendComparison').textContent=`${compact(base.previous_spend)} → ${compact(base.spend)}`;
   el('previousRoas').textContent=previousRoas.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'x';el('currentRoas').textContent=roas.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'x';
-  el('roasDelta').textContent=`≈ ${pct(efficiencyDelta)} de eficiência bruta`;el('flowCurrentSpend').textContent=compact(base.spend);el('flowTargetSpend').textContent=compact(+el('budget').value);
+  el('roasDelta').textContent=`≈ ${pct(efficiencyDelta)} de eficiência real`;el('flowCurrentSpend').textContent=compact(base.spend);el('flowTargetSpend').textContent=compact(+el('budget').value);
 }
 
 function updateCalculator(){
@@ -894,13 +897,14 @@ function updateCalculator(){
     return;
   }
 
-  const mediaSaving=base.spend-budgetValue;
-  const mediaSavingPct=mediaSaving/base.spend*100;
+  const baseRealSpend=realMediaFor(previousMonthKey(selectedMonth),base.spend),budgetRealSpend=realMediaFor(selectedMonth,budgetValue,false);
+  const mediaSaving=baseRealSpend-budgetRealSpend;
+  const mediaSavingPct=baseRealSpend?mediaSaving/baseRealSpend*100:0;
   const dailyBudget=budgetValue/daysValue;
 
   const minimumRevenue=base.revenue*(retentionValue/100);
   const revenueLoss=base.revenue-minimumRevenue;
-  const requiredRoas=minimumRevenue/budgetValue;
+  const requiredRoas=minimumRevenue/budgetRealSpend;
 
   const ordersNeeded=Math.ceil(minimumRevenue/base.ticket);
   const leadsNeeded=Math.ceil(ordersNeeded/(conversionValue/100));
@@ -1154,11 +1158,11 @@ function renderDaily(){
  document.getElementById('salesAccum').textContent=brl(sT);document.getElementById('salesDaysCount').textContent=sD+' dias registrados';document.getElementById('salesAvg').textContent=brl(sA);document.getElementById('salesTargetDaily').textContent=brl(targetDaily);document.getElementById('salesMinDaily').textContent=validMargin?brl(minDaily):'Defina a margem';document.getElementById('salesProjection').textContent=compact(proj);document.getElementById('salesProjectionText').textContent=sD?`projeção em ${salesProjectionDays} dias de venda, sem domingos`:'sem dados suficientes';document.getElementById('salesNeededRest').textContent=brl(need);
  const sb=document.getElementById('salesStatusBox');if(!validMargin){document.getElementById('salesStatus').textContent='Margem pendente';document.getElementById('salesStatusText').textContent='Informe a margem de contribuição para calcular o mínimo econômico.';sb.style.background='#fff8ec'}else if(!sD){document.getElementById('salesStatus').textContent='Aguardando dados';document.getElementById('salesStatusText').textContent='Registre as vendas diárias.';sb.style.background=''}else if(proj>=base.revenue){document.getElementById('salesStatus').textContent='Acima da meta';document.getElementById('salesStatusText').textContent='O ritmo atual projeta manutenção ou crescimento do faturamento.';sb.style.background='#f1fff7'}else if(proj>=minMonthly){document.getElementById('salesStatus').textContent='Zona segura';document.getElementById('salesStatusText').textContent='A projeção está abaixo da meta, mas acima do limite econômico.';sb.style.background='#fff8ec'}else{document.getElementById('salesStatus').textContent='Abaixo do mínimo';document.getElementById('salesStatusText').textContent='No ritmo atual, o corte pode não compensar.';sb.style.background='#fff3f7'}
  let ac=0;document.getElementById('salesHistory').innerHTML=sales.map(x=>{ac+=x.value;const orders=dailyRecords.find(r=>r.date===x.date)?.orders||0;return `<tr><td style="padding:10px">${x.date.split('-').reverse().join('/')}</td><td style="padding:10px">${brl(x.value)}</td><td style="padding:10px">${orders.toLocaleString('pt-BR')}</td><td style="padding:10px">${brl(ac)}</td><td style="padding:10px"><button class="delete-record" type="button" onclick="deleteDailySale(\'${x.date}\')">Excluir</button></td></tr>`}).reverse().join('');
- document.getElementById('mediaAccum').textContent=brl(mT);document.getElementById('mediaDaysCount').textContent=mD+' dias registrados';document.getElementById('mediaAvg').textContent=brl(mA);document.getElementById('mediaDailyTarget').textContent=brl(budget/mediaProjectionDays);document.getElementById('mediaRemaining').textContent=brl(Math.max(budget-mT,0));document.getElementById('mediaRoas').textContent=mT?(sT/mT).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'x':'—';const mp=mD?mA*mediaProjectionDays:0;document.getElementById('mediaProjection').textContent=brl(mp);document.getElementById('mediaProjectionText').textContent=mD?`projeção em ${mediaProjectionDays} dias de campanha, incluindo domingos`:'sem dados suficientes';
+ document.getElementById('mediaAccum').textContent=brl(mT);document.getElementById('mediaDaysCount').textContent=mD+' dias registrados';document.getElementById('mediaAvg').textContent=brl(mA);document.getElementById('mediaDailyTarget').textContent=brl(budget/mediaProjectionDays);document.getElementById('mediaRemaining').textContent=brl(Math.max(budget-mT,0));document.getElementById('mediaRoas').textContent=mT?realRoasFor(selectedMonth,sT,mT).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'x':'—';const mp=mD?mA*mediaProjectionDays:0;document.getElementById('mediaProjection').textContent=brl(mp);document.getElementById('mediaProjectionText').textContent=mD?`projeção em ${mediaProjectionDays} dias de campanha, incluindo domingos`:'sem dados suficientes';
  renderMonthlyTax(mT);
  if(!mD){document.getElementById('mediaStatus').textContent='Aguardando dados';document.getElementById('mediaStatusText').textContent='Registre o gasto diário.'}else if(mp<=budget){document.getElementById('mediaStatus').textContent='Dentro do orçamento';document.getElementById('mediaStatusText').textContent='A projeção está dentro do cenário selecionado.'}else{document.getElementById('mediaStatus').textContent='Acima do orçamento';document.getElementById('mediaStatusText').textContent='No ritmo atual, a mídia deve ultrapassar o orçamento escolhido.'}
- const sm=Object.fromEntries(sales.map(x=>[x.date,x.value]));document.getElementById('mediaHistory').innerHTML=media.map(x=>{const sv=sm[x.date]||0,r=sv&&x.value?sv/x.value:0;return `<tr><td style="padding:10px">${x.date.split('-').reverse().join('/')}</td><td style="padding:10px">${brl(x.value)}</td><td style="padding:10px">${sv?brl(sv):'—'}</td><td style="padding:10px">${r?r.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'x':'—'}</td></tr>`}).reverse().join('')
- const mm=Object.fromEntries(media.map(x=>[x.date,x.value]));const matched=sales.filter(x=>mm[x.date]>0);const matchedSales=matched.reduce((sum,x)=>sum+x.value,0),matchedMedia=matched.reduce((sum,x)=>sum+mm[x.date],0),matchedRoas=matchedMedia?matchedSales/matchedMedia:0,requiredMedia=matchedRoas?base.revenue/matchedRoas:0,projectedSaving=base.spend-mp,additionalPotential=matchedRoas?Math.max(mp-requiredMedia,0):0;
+ const sm=Object.fromEntries(sales.map(x=>[x.date,x.value]));document.getElementById('mediaHistory').innerHTML=media.map(x=>{const sv=sm[x.date]||0,r=sv&&x.value?realRoasFor(x.date.slice(0,7),sv,x.value,false):0;return `<tr><td style="padding:10px">${x.date.split('-').reverse().join('/')}</td><td style="padding:10px">${brl(x.value)}</td><td style="padding:10px">${sv?brl(sv):'—'}</td><td style="padding:10px">${r?r.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'x':'—'}</td></tr>`}).reverse().join('')
+ const mm=Object.fromEntries(media.map(x=>[x.date,x.value]));const matched=sales.filter(x=>mm[x.date]>0);const matchedSales=matched.reduce((sum,x)=>sum+x.value,0),matchedMedia=matched.reduce((sum,x)=>sum+mm[x.date],0),matchedRoas=matchedMedia?realRoasFor(selectedMonth,matchedSales,matchedMedia,false):0,requiredMedia=matchedRoas?base.revenue/matchedRoas:0,projectedRealMedia=realMediaFor(selectedMonth,mp,false),projectedSaving=realMediaFor(previousMonthKey(selectedMonth),base.spend)-projectedRealMedia,additionalPotential=matchedRoas?Math.max(projectedRealMedia-requiredMedia,0):0;
  document.getElementById('currentMediaSaving').textContent=matched.length?(projectedSaving>=0?'+ ':'- ')+brl(Math.abs(projectedSaving)):'—';document.getElementById('currentMediaSavingText').textContent=matched.length?(projectedSaving>=0?'economia projetada contra a base anterior':'gasto projetado acima da base anterior'):'aguardando dados combinados';document.getElementById('requiredMediaAtCurrentRoas').textContent=matchedRoas?brl(requiredMedia):'—';document.getElementById('additionalSavingPotential').textContent=matchedRoas?brl(additionalPotential):'—';document.getElementById('matchedDaysRoas').textContent=matchedRoas?matchedRoas.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'x':'—';
  const confidence=matched.length>=7?'base mais consistente':matched.length>=3?'leitura parcial':'leitura preliminar';document.getElementById('matchedDaysConfidence').textContent=matched.length+' dias combinados • '+confidence;const diagBox=document.getElementById('savingDiagnosisBox');
  if(!matched.length){document.getElementById('savingDiagnosis').textContent='Aguardando dados';document.getElementById('savingDiagnosisText').textContent='Registre vendas e mídia dos mesmos dias para calcular.';document.getElementById('additionalSavingText').textContent='estimativa para teste';diagBox.style.background=''}else if(additionalPotential>0&&proj>=base.revenue){document.getElementById('savingDiagnosis').textContent='Economia possível';document.getElementById('savingDiagnosisText').textContent=`No ritmo atual, existe potencial estimado de reduzir ${brl(additionalPotential)} em mídia e ainda preservar o faturamento-base. Faça o corte de forma gradual.`;document.getElementById('additionalSavingText').textContent='potencial no ritmo atual';diagBox.style.background='#f1fff7'}else if(proj>=minMonthly){document.getElementById('savingDiagnosis').textContent='Dentro do necessário';document.getElementById('savingDiagnosisText').textContent='O ritmo de vendas está na zona segura, mas ainda não há sobra clara de mídia para reduzir.';document.getElementById('additionalSavingText').textContent='sem sobra clara no momento';diagBox.style.background='#fff8ec'}else{document.getElementById('savingDiagnosis').textContent='Sem margem para reduzir';document.getElementById('savingDiagnosisText').textContent='A projeção de vendas ainda não sustenta um novo corte de mídia com segurança.';document.getElementById('additionalSavingText').textContent='não recomendado agora';diagBox.style.background='#fff3f7'}
