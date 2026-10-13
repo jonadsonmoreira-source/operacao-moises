@@ -228,20 +228,20 @@ function applyReliableRoasSummary(){
   const currentPeriodRoas=realRoasFor(selectedMonth,currentPeriod.sales,currentPeriod.media,false);
   const previousPeriodRoas=realRoasFor(previousMonthKey(selectedMonth),previousPeriod.sales,previousPeriod.media,false);
   const periodRoasDiff=pct(currentPeriodRoas,previousPeriodRoas);
-  const projectedSales=hasComparablePrevious?baseS*(currentPeriod.sales/previousPeriod.sales):(salesRows.length?sales/salesRows.length*operatingDaysFor(all):0);
-  const projectedOrders=hasComparablePrevious&&previousPeriod.orders&&baseO?baseO*(currentPeriod.orders/previousPeriod.orders):(salesRows.length?orders/salesRows.length*operatingDaysFor(all):0);
-  const projectedMedia=hasComparablePrevious?baseM*(currentPeriod.media/previousPeriod.media):(mediaRows.length?media/mediaRows.length*calendarDaysFor(all):0);
+  const projectedSales=salesRows.length?sales/salesRows.length*operatingDaysFor(all):0;
+  const projectedOrders=salesRows.length?orders/salesRows.length*operatingDaysFor(all):0;
+  const projectedMedia=mediaRows.length?media/mediaRows.length*calendarDaysFor(all):0;
   const revenueDiff=baseS?pct(projectedSales,baseS):0,ordersDiff=baseO?pct(projectedOrders,baseO):0,mediaDiff=baseM?pct(projectedMedia,baseM):0;
   const labels=document.querySelectorAll('.simple-reading .mini small');
   if(labels.length>=4){labels[0].textContent='Faturamento projetado';labels[1].textContent='Pedidos projetados';labels[2].textContent='Investimento projetado';labels[3].textContent='Retorno atual da mídia'}
-  $('comparisonTitle').textContent='Projeção baseada no mesmo período';
+  $('comparisonTitle').textContent='Projeção pelo ritmo médio atual';
   animateValue($('revenueGoal'),Math.abs(revenueDiff),v=>v.toLocaleString('pt-BR',{maximumFractionDigits:1})+'% '+direction(revenueDiff),120);
   animateValue($('budgetGoal'),Math.abs(ordersDiff),v=>v.toLocaleString('pt-BR',{maximumFractionDigits:1})+'% '+direction(ordersDiff),190);
   animateValue($('revenueRemaining'),Math.abs(mediaDiff),v=>v.toLocaleString('pt-BR',{maximumFractionDigits:1})+'% '+(mediaDiff<=0?'menos mídia':'mais mídia'),260);
   animateValue($('budgetRemaining'),currentPeriodRoas,v=>'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}),330);
-  $('revenueCompare').textContent='Mantendo a diferença atual até o fechamento.';
-  $('ordersCompare').textContent='Mantendo a diferença atual até o fechamento.';
-  $('mediaCompare').textContent='Mantendo a diferença atual até o fechamento.';
+  $('revenueCompare').textContent='Média dos dias de venda aplicada ao mês.';
+  $('ordersCompare').textContent='Média dos dias de venda aplicada ao mês.';
+  $('mediaCompare').textContent='Média diária de mídia aplicada ao mês.';
   $('efficiencyCompare').textContent='Em vendas para cada R$ 1 investido.';
   if(hasComparablePrevious){
     const samePeriod=`01 a ${String(cutoffDay).padStart(2,'0')}/${selectedMonth.slice(5)}`;
@@ -269,9 +269,9 @@ function updateProjectionPresentation(){
   const hasComparablePrevious=previousPeriod.sales>0&&previousPeriod.media>0;
   if(!hasComparablePrevious){slide.hidden=true;return}
   slide.hidden=false;
-  const projectedSales=baseS*(currentPeriod.sales/previousPeriod.sales);
-  const projectedOrders=previousPeriod.orders&&baseO?baseO*(currentPeriod.orders/previousPeriod.orders):baseO;
-  const projectedMedia=baseM*(currentPeriod.media/previousPeriod.media);
+  const projectedSales=salesRows.length?salesRows.reduce((sum,r)=>sum+r.sales,0)/salesRows.length*operatingDaysFor(all):0;
+  const projectedOrders=salesRows.length?salesRows.reduce((sum,r)=>sum+r.orders,0)/salesRows.length*operatingDaysFor(all):0;
+  const projectedMedia=mediaRows.length?mediaRows.reduce((sum,r)=>sum+r.media,0)/mediaRows.length*calendarDaysFor(all):0;
   const currentPeriodRoas=realRoasFor(selectedMonth,currentPeriod.sales,currentPeriod.media,false);
   const revenueDiff=(currentPeriod.sales/previousPeriod.sales-1)*100;
   const ordersDiff=previousPeriod.orders?(currentPeriod.orders/previousPeriod.orders-1)*100:0;
