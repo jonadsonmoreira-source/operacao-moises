@@ -12,6 +12,7 @@
     @media(max-width:480px){.shell{width:calc(100% - 18px);padding-top:18px}.hero{padding:22px 18px;border-radius:25px}.metrics{gap:7px}.metric{padding:13px 11px}.metric strong{font-size:clamp(16px,4.35vw,20px);letter-spacing:-.065em}.metric span{font-size:9px;line-height:1.35}.closing{grid-template-columns:1fr}.closing-copy{grid-column:auto}.efficiency,.pace{padding:19px 15px}.efficiency-list{gap:22px}.efficiency-row{grid-template-columns:1fr 70px;gap:8px 10px}.efficiency-track{grid-column:1/-1;grid-row:2}.efficiency-value{grid-column:2;grid-row:1}.efficiency-value strong{font-size:20px}.pace-head{display:block}.pace-verdict{margin-top:10px;text-align:left}.pace-bar-row{grid-template-columns:1fr auto}.pace-bar-row .pace-track{grid-column:1/-1;grid-row:2}.pace-bar-row strong{grid-column:2;grid-row:1}.store{padding:19px}.store-head{flex-direction:column}.store-metrics{grid-template-columns:1fr;gap:6px}.store-metric{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px}.store-metric span{flex:1}.store-metric strong{flex:0 0 auto;font-size:18px;white-space:nowrap;text-align:right}}
     @media(max-width:360px){.metrics{grid-template-columns:1fr}.metric{display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px 10px}.metric small,.metric span{grid-column:1}.metric strong{grid-column:2;grid-row:1/3;font-size:18px}.reading{align-items:flex-start;font-size:13px}.store-metric strong{font-size:16px}}
   </style>
+<link rel="stylesheet" href="./meta-leads.css?v=20261026">
 </head>
 <body class="auth-pending">
   <main class="shell">
@@ -76,4 +77,5 @@
     }
     $('logout').onclick=async()=>{await db.auth.signOut();location.replace('./index.html')};db.auth.onAuthStateChange((e,s)=>{if(e==='SIGNED_OUT'||!s)location.replace('./index.html')});boot();
   </script>
+<script src="./meta-leads.js?v=20261026"></script><script>MoisesLeads.mount({db,group:true,anchor:"main > .hero"}).catch(error=>console.error('Não foi possível carregar os indicadores de leads.'));</script>
 </body></html>
