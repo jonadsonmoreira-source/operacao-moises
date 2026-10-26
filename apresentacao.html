@@ -370,5 +370,70 @@ const renderWithGoal=render;render=function(){renderWithGoal();renderSalesGoal()
   new MutationObserver(refineDots).observe(dots,{childList:true});
   syncPulse();refineDots();
 })();
-</script><script src="./meta-leads.js?v=20261026"></script><script>MoisesLeads.mount({db,group:false,anchor:"#goalPath"}).catch(error=>console.error('Não foi possível carregar os indicadores de leads.'));</script>
+</script><script src="./meta-leads.js?v=20261026"></script><script>MoisesLeads.mount({db,group:false,anchor:"#goalPath"}).catch(error=>console.error('Não foi possível carregar os indicadores de leads.'));</script><script>
+/* Apresentação adaptativa: cada operação recebe uma narrativa coerente com seu momento. */
+const presentationNarratives={
+  jaragua:{
+    stage:'Operação de referência',
+    opening:month=>`${month} confirma a força da <em>referência.</em>`,
+    comparison:'Consistência mês a mês',
+    comparisonTitle:positive=>positive?'A referência avançou <em>novamente.</em>':'A referência está defendendo seu <em>ritmo.</em>',
+    efficiency:'Eficiência em escala',
+    efficiencyTitle:positive=>positive?'Crescer com controle é o <em>próximo nível.</em>':'Escala exige eficiência <em>todos os dias.</em>',
+    rhythm:'Ritmo de uma operação madura',
+    rhythmTitle:'A constância aparece <em>dia após dia.</em>',
+    projection:'Direção do fechamento',
+    closing:'Direção estratégica da referência'
+  },
+  porto:{
+    stage:'Operação em aceleração',
+    opening:month=>`${month} mostra a Porto ganhando <em>tração.</em>`,
+    comparison:'Evolução desde a abertura',
+    comparisonTitle:positive=>positive?'A Porto transformou movimento em <em>resultado.</em>':'A Porto está lapidando seu <em>ritmo.</em>',
+    efficiency:'Eficiência da nova operação',
+    efficiencyTitle:positive=>positive?'Cada real já está construindo <em>tração.</em>':'O próximo ganho vem de aproveitar melhor <em>cada real.</em>',
+    rhythm:'Ritmo comercial da Porto',
+    rhythmTitle:'A consistência começa a <em>aparecer.</em>',
+    projection:'O próximo patamar da Porto',
+    closing:'Foco da Porto'
+  },
+  floripa:{
+    stage:'Operação em consolidação',
+    opening:month=>`${month} revela uma operação mais <em>consistente.</em>`,
+    comparison:'Ritmo contra referência',
+    comparisonTitle:positive=>positive?'Floripa ganhou <em>consistência.</em>':'Floripa precisa recuperar <em>regularidade.</em>',
+    efficiency:'Eficiência da operação',
+    efficiencyTitle:positive=>positive?'Consistência também é <em>eficiência.</em>':'O investimento precisa virar mais <em>venda.</em>',
+    rhythm:'Regularidade comercial',
+    rhythmTitle:'O resultado se constrói <em>todos os dias.</em>',
+    projection:'Direção do fechamento',
+    closing:'Foco de Floripa'
+  },
+  'beira-rio':{
+    stage:'Operação em construção',
+    opening:month=>`${month} mostra o avanço real da <em>Beira Rio.</em>`,
+    comparison:'Evolução da base',
+    comparisonTitle:positive=>positive?'A Beira Rio avançou na <em>direção certa.</em>':'A próxima virada depende de <em>regularidade.</em>',
+    efficiency:'Aproveitamento da mídia',
+    efficiencyTitle:positive=>positive?'O movimento está virando <em>resultado.</em>':'Movimento só vale quando vira <em>venda.</em>',
+    rhythm:'Cadência da operação',
+    rhythmTitle:'Previsibilidade começa no <em>ritmo diário.</em>',
+    projection:'O próximo movimento da Beira Rio',
+    closing:'Foco da Beira Rio'
+  }
+};
+function applyAdaptivePresentation(){
+  const slug=workspaceMeta?.slug||'jaragua',profile=presentationNarratives[slug]||presentationNarratives.jaragua,slides=[...document.querySelectorAll('.deck-slide')],month=monthName(selectedMonth).split('/')[0],current=monthTotals(selectedMonth),previous=monthTotals(previousMonthKey(selectedMonth)),referenceSales=num(config?.base_revenue)||previous.sales,referenceMedia=num(config?.base_spend)||previous.media,hasPrevious=referenceSales>0,currentRows=rows(),salesDays=currentRows.filter(row=>row.sales>0),projectedSales=selectedMonth<currentMonthKey()?current.sales:(salesDays.length?current.sales/salesDays.length*operatingDaysFor(currentRows):0),positiveRevenue=hasPrevious?projectedSales>=referenceSales:true,currentRoas=realRoasFor(selectedMonth,current.sales,current.media),previousRoas=referenceMedia?realRoasFor(previousMonthKey(selectedMonth),referenceSales,referenceMedia):0,positiveEfficiency=previousRoas?currentRoas>=previousRoas:currentRoas>0;
+  if(slides[0]){slides[0].querySelector('.deck-kicker').textContent=profile.stage;slides[0].querySelector('h2').innerHTML=profile.opening(month)}
+  if(slides[1]){slides[1].querySelector('.deck-kicker').textContent=hasPrevious?profile.comparison:'Começo x momento atual';slides[1].querySelector('h2').innerHTML=profile.comparisonTitle(positiveRevenue)}
+  if(slides[2]){slides[2].querySelector('.deck-kicker').textContent=profile.efficiency;slides[2].querySelector('h2').innerHTML=profile.efficiencyTitle(positiveEfficiency)}
+  if(slides[3]){slides[3].querySelector('.deck-kicker').textContent=profile.rhythm;slides[3].querySelector('h2').innerHTML=profile.rhythmTitle}
+  const projection=$('deckProjectionSlide');if(projection)projection.querySelector('.deck-kicker').textContent=profile.projection;
+  const final=slides.at(-1);if(final)final.querySelector('.deck-kicker').textContent=profile.closing;
+  const deckBrand=document.querySelector('.deck-brand');if(deckBrand)deckBrand.textContent=`${workspaceMeta?.brand_name||'Operação Moisés'} · Visão Executiva`;
+  $('presentation').dataset.narrative=slug;
+}
+const updatePresentationByStore=updatePresentation;
+updatePresentation=function(){updatePresentationByStore();applyAdaptivePresentation()};
+</script>
 </body></html>

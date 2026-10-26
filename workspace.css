@@ -76,3 +76,48 @@ html[data-theme="dark"][data-workspace="porto"] .executive-page .signature-copy 
 .executive-page .workspace-control select,.executive-page .month-control select{min-width:0;max-width:220px;overflow:hidden;font-size:12px;text-overflow:ellipsis;white-space:nowrap}
 .executive-page #startPresentation{min-width:170px;padding-inline:17px}
 @media(max-width:760px){.executive-page .executive-heading{align-items:flex-start;flex-direction:column;gap:14px}.executive-page .executive-signature{padding:8px 12px 8px 8px;border-radius:15px}.executive-page .signature-monogram{width:41px;height:41px;border-radius:12px;font-size:15px}.executive-page .signature-copy strong{font-size:13px}.executive-page .actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}.executive-page .actions>*{width:100%;height:43px;max-width:none}.executive-page .workspace-control,.executive-page .month-control,.executive-page #startPresentation{grid-column:1/-1;max-width:none}.executive-page .workspace-control select,.executive-page .month-control select{max-width:70%}.executive-page .actions a,.executive-page .actions button{min-width:0;padding-inline:9px;font-size:11px;white-space:normal;overflow-wrap:anywhere}}
+
+/* porto-color-balance-v2 — azul estrutura, dourado apenas como sinal de valor */
+html[data-workspace="porto"]{--brand-accent:#c7a23a;--brand-secondary:#173654}
+html[data-workspace="porto"] body{background-image:radial-gradient(circle at 91% 0,#d9e5ef75,transparent 27%),linear-gradient(145deg,#f8fafb,#fff 48%,#faf8f1)}
+html[data-workspace="porto"] body:before{background:radial-gradient(circle,#b9cad9,transparent 68%);opacity:.24}
+html[data-workspace="porto"] body:after{background:radial-gradient(circle,#d8c47a,transparent 68%);opacity:.12}
+html[data-workspace="porto"] .brand h1{background-image:linear-gradient(110deg,#10263b 5%,#244d71 70%,#b58d24)}
+html[data-workspace="porto"] .hero{background:radial-gradient(circle at 84% 18%,#35648770 0,transparent 31%),radial-gradient(circle at 14% 112%,#c7a23a24 0,transparent 34%),linear-gradient(135deg,#0b1a28,#132c43 58%,#1e4562)}
+html[data-workspace="porto"] .hero:before{border-color:#ffffff10;box-shadow:0 0 0 28px #c7a23a0b}
+html[data-workspace="porto"] .hero .eyebrow:before{background:#d4b34f;box-shadow:0 0 0 7px #d4b34f20}
+html[data-workspace="porto"] .metric strong,html[data-workspace="porto"] .mini strong{color:#173654}
+html[data-workspace="porto"] .executive-primary .metric:nth-child(3){border-color:#b9cad7;box-shadow:0 16px 44px #17365410,inset 0 1px #ffffff80}
+html[data-workspace="porto"] .executive-primary .metric:nth-child(4){border-color:transparent;background:linear-gradient(145deg,#10283d,#1e4b6b)}
+html[data-workspace="porto"] .executive-primary .metric:nth-child(4) strong{color:#f3d774}
+html[data-workspace="porto"] .executive-support{background:linear-gradient(145deg,#0d2133,#173b56)!important}
+html[data-workspace="porto"] .executive-support>.eyebrow{color:#e1c568!important}
+html[data-workspace="porto"] .support-grid .metric strong{color:#fff}
+html[data-workspace="porto"] .goal-fill{background:linear-gradient(90deg,#173654 0,#285b7d 78%,#c7a23a 100%);box-shadow:0 9px 25px #17365424}
+html[data-workspace="porto"] .goal-action{background:#10283d}
+html[data-workspace="porto"] .goal-now strong,html[data-workspace="porto"] .tax-figure strong{color:#173654}
+html[data-workspace="porto"] .sales{background:linear-gradient(#2d6387,#153954)}
+html[data-workspace="porto"] .strategy-progress{background:linear-gradient(125deg,#10283d,#1f5271 78%,#b8902b)}
+html[data-workspace="porto"] .executive-signature{border-color:#c7a23a55;background:linear-gradient(135deg,#c7a23a10,#1736540e)}
+html[data-workspace="porto"] .signature-monogram{background:linear-gradient(135deg,#173654 8%,#285f82 72%,#c7a23a)}
+html[data-workspace="porto"] .signature-copy small{color:#9b7720}
+html[data-workspace="porto"] .presentation{background:#07131d}
+html[data-workspace="porto"] .presentation-bg{background:radial-gradient(circle at 78% 19%,#2a66865c,transparent 31%),radial-gradient(circle at 15% 84%,#c7a23a20,transparent 27%),linear-gradient(145deg,#07131d,#102b40 58%,#081824)}
+html[data-workspace="porto"] .deck-mega{background-image:linear-gradient(110deg,#fff 22%,#dbe9f2 62%,#d6ba5e);-webkit-background-clip:text;background-clip:text}
+html[data-workspace="porto"] .deck-fill{background:linear-gradient(90deg,#1f4a68,#4d7896);box-shadow:0 0 25px #34749d44}
+html[data-workspace="porto"] .deck-fill.current,html[data-workspace="porto"] .deck-progress i{background:linear-gradient(90deg,#a27d20,#dec45f)}
+html[data-theme="dark"][data-workspace="porto"]{--ink:#f2f6f8;--muted:#aab9c4;--line:#30495d;--green:#65d8a4;--orange:#e2bb55;--red:#ff8294}
+html[data-theme="dark"][data-workspace="porto"] body{background-image:radial-gradient(circle at 90% 0,#244f6b4d,transparent 30%),radial-gradient(circle at 5% 75%,#8f742329,transparent 27%),linear-gradient(145deg,#07111a,#0c1d2b 55%,#09151f)}
+html[data-theme="dark"][data-workspace="porto"] .brand h1{background-image:linear-gradient(110deg,#fff,#bfd6e5 72%,#d6ba5e)}
+html[data-theme="dark"][data-workspace="porto"] .metric,html[data-theme="dark"][data-workspace="porto"] .card{background:#102331e8;border-color:#30495d;box-shadow:0 18px 48px #0007}
+html[data-theme="dark"][data-workspace="porto"] .metric strong,html[data-theme="dark"][data-workspace="porto"] .mini strong{color:#e9f2f7}
+html[data-theme="dark"][data-workspace="porto"] .executive-primary .metric:nth-child(4) strong{color:#efd273}
+html[data-theme="dark"][data-workspace="porto"] .mini,html[data-theme="dark"][data-workspace="porto"] .goal-message{background:#152d3e;border-color:#30495d}
+html[data-theme="dark"][data-workspace="porto"] .goal-action{background:#081923}
+html[data-theme="dark"][data-workspace="porto"] .goal-now strong,html[data-theme="dark"][data-workspace="porto"] .tax-figure strong{color:#efd273}
+html[data-theme="dark"][data-workspace="porto"] .insight{background:linear-gradient(145deg,#142c3d,#0e202e);border-color:#30495d}
+html[data-theme="dark"][data-workspace="porto"] .insight-empty{background:#132936;color:#aab9c4}
+html[data-theme="dark"][data-workspace="porto"] .actions a,html[data-theme="dark"][data-workspace="porto"] .workspace-control,html[data-theme="dark"][data-workspace="porto"] .month-control,html[data-theme="dark"][data-workspace="porto"] .theme-toggle{background:#112838!important;color:#dce8ef!important;border-color:#365267!important}
+html[data-theme="dark"][data-workspace="porto"] .workspace-control select,html[data-theme="dark"][data-workspace="porto"] .month-control select{color:#f2f6f8}
+html[data-theme="dark"][data-workspace="porto"] .executive-signature{background:linear-gradient(135deg,#18354a,#0d2231);border-color:#6f653a}
+html[data-theme="dark"][data-workspace="porto"] .signature-copy strong{color:#f2f6f8}
