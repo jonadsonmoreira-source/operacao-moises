@@ -637,8 +637,8 @@ body.compact-admin table{font-variant-numeric:tabular-nums}
 <section id="c7" class="chapter dark">
   <div class="inner reveal">
     <div class="kicker">Ferramenta 03 — Anúncios</div>
-    <h2>Registro diário<br>de mídia</h2>
-    <p class="lead">Registre o gasto real do dia anterior. O painel cruza mídia e vendas automaticamente.</p>
+    <h2>Mídia automática<br>da Meta</h2>
+    <p class="lead">O gasto consolidado do dia anterior entra sozinho. O painel cruza mídia e vendas automaticamente; o campo manual fica apenas como contingência.</p>
     <div class="tax-overview" aria-label="Imposto da mídia no mês">
       <h3>Imposto da mídia · <span id="taxOverviewMonth">mês selecionado</span></h3>
       <p>Leitura estratégica do custo real da mídia e do retorno da operação. A estimativa é substituída pelo valor confirmado quando a nota do mês estiver disponível.</p>
@@ -995,23 +995,25 @@ async function saveSettings(){
   showSync(error?'Falha ao sincronizar':'Dados sincronizados');
 }
 async function loadCloudData(){
-  const [{data:settings,error:settingsError},{data:traffic,error:trafficError},{data:commercial,error:commercialError},{data:monday,error:mondayError},{data:connection},{data:taxes,error:taxesError},{data:invoices,error:invoicesError}]=await Promise.all([
+  const [{data:settings,error:settingsError},{data:traffic,error:trafficError},{data:commercial,error:commercialError},{data:monday,error:mondayError},{data:connection},{data:taxes,error:taxesError},{data:invoices,error:invoicesError},{data:automatic,error:automaticError}]=await Promise.all([
     db.from('moises_workspace_config').select('*').eq('workspace_id',currentWorkspaceId).single(),
     db.from('moises_daily_metrics').select('record_date,media_spend,leads,clicks,impressions,action_note').eq('workspace_id',currentWorkspaceId).order('record_date'),
     db.from('moises_commercial_daily').select('record_date,sales,orders').eq('workspace_id',currentWorkspaceId).order('record_date'),
     db.from('moises_monday_summaries').select('id,period_start,period_end,title,summary,source_count,published,generated_at,published_at,updated_at').eq('workspace_id',currentWorkspaceId).order('period_start',{ascending:false}).limit(1),
     db.from('moises_monday_connections').select('board_name,last_synced_at,last_sync_status,last_sync_message').eq('workspace_id',currentWorkspaceId).maybeSingle(),
     db.from('moises_media_tax_monthly').select('month,media_excludes_tax,estimated_rate,invoices_complete').eq('workspace_id',currentWorkspaceId),
-    db.from('moises_media_invoices').select('month,account_label,invoice_base,invoice_total').eq('workspace_id',currentWorkspaceId)
+    db.from('moises_media_invoices').select('month,account_label,invoice_base,invoice_total').eq('workspace_id',currentWorkspaceId),
+    db.from('moises_meta_leads_daily').select('record_date,meta_spend,leads,is_partial,synced_at').eq('workspace_id',currentWorkspaceId).eq('is_partial',false).order('record_date')
   ]);
-  if(settingsError||trafficError||commercialError||mondayError||taxesError||invoicesError||!settings){showSync('Falha ao carregar dados');return false;}
+  if(settingsError||trafficError||commercialError||mondayError||taxesError||invoicesError||automaticError||!settings){showSync('Falha ao carregar dados');return false;}
   monthlyTaxes=taxes||[];mediaInvoices=invoices||[];
   mondayInsights=monday||[];mondayConnection=connection||null;
   workspaceSettings=settings;
   ['budget','days','hours','retention','conversion','margin'].forEach(k=>{if(settings[k]!=null&&el(k))el(k).value=settings[k]});
   el('idealDailySpend').value=settings.ideal_daily_spend??2500;el('maxDailySpend').value=settings.max_daily_spend??2700;
   const byDate=new Map();
-  (traffic||[]).forEach(r=>byDate.set(r.record_date,{date:r.record_date,sales:0,orders:0,media:Number(r.media_spend),leads:+r.leads,clicks:+r.clicks,impressions:+r.impressions,note:r.action_note||''}));
+  (traffic||[]).forEach(r=>byDate.set(r.record_date,{date:r.record_date,sales:0,orders:0,media:Number(r.media_spend),leads:+r.leads,clicks:+r.clicks,impressions:+r.impressions,note:r.action_note||'',mediaSource:'manual'}));
+  (automatic||[]).forEach(r=>{const row=byDate.get(r.record_date)||{date:r.record_date,sales:0,orders:0,clicks:0,impressions:0,note:''};byDate.set(r.record_date,{...row,media:Number(r.meta_spend),leads:+r.leads,mediaSource:'meta',mediaSyncedAt:r.synced_at})});
   (commercial||[]).forEach(r=>{const row=byDate.get(r.record_date)||{date:r.record_date,media:0,leads:0,clicks:0,impressions:0,note:''};byDate.set(r.record_date,{...row,sales:Number(r.sales),orders:+r.orders})});
   allDailyRecords=[...byDate.values()].sort((a,b)=>a.date.localeCompare(b.date));
   syncMonthSelector();
@@ -1065,6 +1067,7 @@ function subscribeRealtime(){
   const refresh=()=>{clearTimeout(realtimeTimer);realtimeTimer=setTimeout(async()=>{if(await loadCloudData()){updateCalculator();renderDaily();showSync('Atualizado em tempo real')}},250)};
   realtimeChannel=db.channel(`moises-admin-${currentWorkspaceId}`)
     .on('postgres_changes',{event:'*',schema:'public',table:'moises_daily_metrics',filter:`workspace_id=eq.${currentWorkspaceId}`},refresh)
+    .on('postgres_changes',{event:'*',schema:'public',table:'moises_meta_leads_daily',filter:`workspace_id=eq.${currentWorkspaceId}`},refresh)
     .on('postgres_changes',{event:'*',schema:'public',table:'moises_commercial_daily',filter:`workspace_id=eq.${currentWorkspaceId}`},refresh)
     .on('postgres_changes',{event:'*',schema:'public',table:'moises_workspace_config',filter:`workspace_id=eq.${currentWorkspaceId}`},refresh)
     .on('postgres_changes',{event:'*',schema:'public',table:'moises_media_tax_monthly',filter:`workspace_id=eq.${currentWorkspaceId}`},refresh)
