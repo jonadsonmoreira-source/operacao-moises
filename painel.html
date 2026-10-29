@@ -1005,8 +1005,8 @@ async function loadCloudData(){
     db.from('moises_media_invoices').select('month,account_label,invoice_base,invoice_total').eq('workspace_id',currentWorkspaceId),
     db.from('moises_meta_leads_daily').select('record_date,meta_spend,leads,is_partial,synced_at').eq('workspace_id',currentWorkspaceId).eq('is_partial',false).order('record_date')
   ]);
-  if(settingsError||trafficError||commercialError||mondayError||taxesError||invoicesError||automaticError||!settings){showSync('Falha ao carregar dados');return false;}
-  monthlyTaxes=taxes||[];mediaInvoices=invoices||[];
+  if(settingsError||trafficError||commercialError||mondayError||taxesError||invoicesError||!settings){showSync('Falha ao carregar dados');return false;}
+  monthlyTaxes=taxes||[];mediaInvoices=invoices||[];if(automaticError)showSync('Meta indisponível • usando contingência manual');
   mondayInsights=monday||[];mondayConnection=connection||null;
   workspaceSettings=settings;
   ['budget','days','hours','retention','conversion','margin'].forEach(k=>{if(settings[k]!=null&&el(k))el(k).value=settings[k]});
