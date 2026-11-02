@@ -80,7 +80,19 @@
       slides[3].querySelector('h2').textContent='Vendas registradas ao longo do mês';
       document.getElementById('deckProjectionSlide').hidden=true;
       text('deckConclusion',s.complete?'Balanço do fechamento':'Fechamento com pendências');
-      text('deckConclusionText',`${money(s.revenue)} em vendas, ticket médio de ${money(s.ticket)} e custo por lead de ${money(s.cpl)}. ${s.complete?'Todos os dias possuem registros de vendas e leads.':'Há dias pendentes; a análise final depende de completar a base.'}`);
+      const goal=Number(c.target?.goal||0),gap=s.revenue-goal;
+      const goalSummary=goal>0?`${pct(s.revenue/goal*100)} da meta de ${money(goal)}; ${money(Math.abs(gap))} ${gap>=0?'acima':'abaixo'} do objetivo.`:'Meta comercial não cadastrada.';
+      text('deckConclusionText',`${goalSummary} Ticket médio de ${money(s.ticket)} e custo por lead de ${money(s.cpl)}. ${s.complete?'Base diária completa.':'Há dias pendentes; os resultados ainda podem mudar.'}`);
+      const values=c.sales.filter(r=>r.record_date.startsWith(c.month+'-')).sort((a,b)=>a.record_date.localeCompare(b.record_date));
+      if(values.length){
+        const peak=Math.max(1,...values.map(r=>Number(r.sales))),h=270,step=values.length>1?1000/(values.length-1):0;
+        const points=values.map((r,i)=>[i*step,h-Number(r.sales)/peak*(h-24)]),line='M '+points.map(p=>p.join(' ')).join(' L ');
+        document.getElementById('deckLine').setAttribute('d',line);
+        document.getElementById('deckArea').setAttribute('d',line+` L ${points.at(-1)[0]} ${h} L 0 ${h} Z`);
+        document.getElementById('deckDots').innerHTML=points.map(p=>`<circle class="deck-dot" cx="${p[0]}" cy="${p[1]}" r="3.5"/>`).join('');
+        const shortDate=r=>r.record_date.split('-').reverse().slice(0,2).join('/');
+        text('deckChartStart',shortDate(values[0]));text('deckChartMiddle',shortDate(values[Math.floor((values.length-1)/2)]));text('deckChartEnd',shortDate(values.at(-1)));
+      }
       text('deckPointSales',money(s.revenue)+' em vendas');text('deckPointMedia',money(s.spend)+' na Meta');text('deckPointOrders',number(s.leads)+' leads · '+number(s.orders)+' pedidos');
     }
     return {render,deck,restore};
